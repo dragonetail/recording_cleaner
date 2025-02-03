@@ -1,127 +1,168 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:just_audio/just_audio.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:recording_cleaner/core/constants/app_constants.dart';
 import 'package:recording_cleaner/core/utils/app_logger.dart';
-import 'package:recording_cleaner/domain/entities/recording_entity.dart';
-import 'package:recording_cleaner/domain/services/audio_player_service.dart';
-import 'package:recording_cleaner/presentation/blocs/audio_player/audio_player_bloc.dart';
 import 'package:recording_cleaner/presentation/blocs/recordings/recordings_bloc.dart';
 import 'package:recording_cleaner/presentation/blocs/recordings/recordings_event.dart';
 import 'package:recording_cleaner/presentation/blocs/recordings/recordings_state.dart';
+import 'package:recording_cleaner/presentation/widgets/empty_state.dart';
+import 'package:recording_cleaner/presentation/widgets/loading_state.dart';
 import 'package:recording_cleaner/presentation/widgets/recording_list_item.dart';
-import 'package:recording_cleaner/presentation/widgets/recording_filter_dialog.dart';
-import 'package:recording_cleaner/data/models/recording_model.dart';
+import 'package:recording_cleaner/presentation/widgets/selection_mode.dart';
 
-class RecordingsPage extends StatefulWidget {
+/// 录音列表页面
+class RecordingsPage extends StatelessWidget {
+  /// 创建[RecordingsPage]实例
   const RecordingsPage({Key? key}) : super(key: key);
-
-  @override
-  State<RecordingsPage> createState() => _RecordingsPageState();
-}
-
-class _RecordingsPageState extends State<RecordingsPage> {
-  late final AudioPlayer _audioPlayer;
-  late final AudioPlayerService _audioPlayerService;
-  late final AudioPlayerBloc _audioPlayerBloc;
-  String? _currentTimeFilter;
-  String? _currentDurationFilter;
-  String? _currentSortBy;
-  bool? _currentAscending;
-
-  @override
-  void initState() {
-    super.initState();
-    _audioPlayer = AudioPlayer();
-    _audioPlayerService = AudioPlayerService(
-      player: _audioPlayer,
-      logger: appLogger,
-    );
-    _audioPlayerBloc = AudioPlayerBloc(playerService: _audioPlayerService);
-
-    // 初始加载录音列表
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<RecordingsBloc>().add(const LoadRecordings());
-    });
-  }
-
-  @override
-  void dispose() {
-    _audioPlayerBloc.close();
-    _audioPlayer.dispose();
-    super.dispose();
-  }
-
-  Future<void> _showFilterDialog() async {
-    await showDialog<void>(
-      context: context,
-      builder: (context) => RecordingFilterDialog(
-        timeFilter: _currentTimeFilter,
-        durationFilter: _currentDurationFilter,
-        sortBy: _currentSortBy,
-        ascending: _currentAscending,
-        onApply: (timeFilter, durationFilter, sortBy, ascending) {
-          setState(() {
-            _currentTimeFilter = timeFilter;
-            _currentDurationFilter = durationFilter;
-            _currentSortBy = sortBy;
-            _currentAscending = ascending;
-          });
-
-          context.read<RecordingsBloc>().add(
-                LoadRecordings(
-                  timeFilter: timeFilter,
-                  durationFilter: durationFilter,
-                  sortBy: sortBy,
-                  ascending: ascending,
-                ),
-              );
-        },
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => _audioPlayerBloc,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('录音文件'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.filter_list),
-              onPressed: _showFilterDialog,
-            ),
-          ],
-        ),
-        body: BlocBuilder<RecordingsBloc, RecordingsState>(
-          builder: (context, state) {
-            if (state.isLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
+      create: (context) => RecordingsBloc(
+        logger: appLogger,
+        recordingRepository: context.read(),
+      )..add(const LoadRecordings()),
+      child: const _RecordingsContent(),
+    );
+  }
+}
 
-            if (state.error != null) {
-              return Center(child: Text('加载失败：${state.error}'));
-            }
+class _RecordingsContent extends StatelessWidget {
+  const _RecordingsContent({Key? key}) : super(key: key);
 
-            if (state.recordings.isEmpty) {
-              return const Center(child: Text('暂无录音文件'));
-            }
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<RecordingsBloc, RecordingsState>(
+      builder: (context, state) {
+        final appBar = state.isSelectionMode
+            ? SelectionModeAppBar(
+                selectedCount: state.selectedRecordings.length,
+                totalCount: state.recordings.length,
+                onSelectAll: () {
+                  context.read<RecordingsBloc>().add(const ToggleSelectAll());
+                },
+                onDelete: () async {
+                  context
+                      .read<RecordingsBloc>()
+                      .add(DeleteSelectedRecordings());
+                  return true;
+                },
+                onShare: () {
+                  // TODO: 实现分享功能
+                },
+                onCancel: () {
+                  context.read<RecordingsBloc>().add(const ExitSelectionMode());
+                },
+              )
+            : AppBar(
+                title: const Text('录音文件'),
+                centerTitle: true,
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.checklist_rounded),
+                    onPressed: () {
+                      context
+                          .read<RecordingsBloc>()
+                          .add(const EnterSelectionMode());
+                    },
+                  ),
+                ],
+              );
 
-            return ListView.builder(
-              itemCount: state.recordings.length,
-              itemBuilder: (context, index) {
-                final recording = state.recordings[index];
-                return RecordingListItem(
-                  recording: recording,
-                  audioPlayerBloc: context.read<AudioPlayerBloc>(),
-                );
-              },
-            );
-          },
-        ),
-      ),
+        final body = state.isLoading
+            ? const LoadingState()
+            : state.error != null
+                ? ErrorState(
+                    message: state.error!,
+                    onRetry: () {
+                      context
+                          .read<RecordingsBloc>()
+                          .add(const LoadRecordings());
+                    },
+                  )
+                : state.recordings.isEmpty
+                    ? const EmptyState(
+                        message: '暂无录音文件',
+                      )
+                    : RefreshIndicator(
+                        onRefresh: () async {
+                          context
+                              .read<RecordingsBloc>()
+                              .add(const LoadRecordings());
+                        },
+                        child: AnimationLimiter(
+                          child: ListView.builder(
+                            padding: EdgeInsets.symmetric(vertical: 8.h),
+                            itemCount: state.recordings.length,
+                            itemBuilder: (context, index) {
+                              final recording = state.recordings[index];
+                              return RecordingListItem(
+                                index: index,
+                                title: recording.name,
+                                duration: recording.duration,
+                                size: recording.size,
+                                samples: recording.samples,
+                                onTap: () {
+                                  // TODO: 实现播放功能
+                                },
+                                onDelete: () async {
+                                  context.read<RecordingsBloc>().add(
+                                        DeleteRecordings([recording.id]),
+                                      );
+                                  return true;
+                                },
+                                onAction: () {
+                                  // TODO: 实现收藏功能
+                                },
+                                actionLabel: '收藏',
+                                isSelected: state.selectedRecordings
+                                    .contains(recording.id),
+                                onSelectedChanged: state.isSelectionMode
+                                    ? (selected) {
+                                        context.read<RecordingsBloc>().add(
+                                              ToggleRecordingSelection(
+                                                recording.id,
+                                              ),
+                                            );
+                                      }
+                                    : null,
+                                showSlideAction: !state.isSelectionMode,
+                              );
+                            },
+                          ),
+                        ),
+                      );
+
+        return Scaffold(
+          appBar: appBar,
+          body: body,
+          bottomNavigationBar: state.isSelectionMode
+              ? SelectionMode(
+                  selectedCount: state.selectedRecordings.length,
+                  totalCount: state.recordings.length,
+                  onSelectAll: () {
+                    context.read<RecordingsBloc>().add(const ToggleSelectAll());
+                  },
+                  onDelete: () async {
+                    context
+                        .read<RecordingsBloc>()
+                        .add(DeleteSelectedRecordings());
+                    return true;
+                  },
+                  onShare: () {
+                    // TODO: 实现分享功能
+                  },
+                  onCancel: () {
+                    context
+                        .read<RecordingsBloc>()
+                        .add(const ExitSelectionMode());
+                  },
+                )
+              : null,
+        );
+      },
     );
   }
 }

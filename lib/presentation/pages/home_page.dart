@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:recording_cleaner/presentation/pages/overview_page.dart';
+import 'package:recording_cleaner/presentation/pages/recordings_page.dart';
 
 /// 主页面
 class HomePage extends StatefulWidget {
@@ -18,7 +19,7 @@ class _HomePageState extends State<HomePage> {
   /// 页面列表
   final List<Widget> _pages = [
     const OverviewPage(),
-    const Placeholder(),
+    const RecordingsPage(),
     const Placeholder(),
     const Placeholder(),
   ];

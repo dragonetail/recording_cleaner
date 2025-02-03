@@ -7,43 +7,45 @@ import 'package:recording_cleaner/domain/usecases/get_recordings_usecase.dart';
 import 'package:recording_cleaner/presentation/blocs/recordings/recordings_event.dart';
 import 'package:recording_cleaner/presentation/blocs/recordings/recordings_state.dart';
 
+/// 录音列表 BLoC
 class RecordingsBloc extends Bloc<RecordingsEvent, RecordingsState> {
-  final GetRecordingsUseCase getRecordings;
-  final DeleteRecordingsUseCase deleteRecordings;
-  final RecordingRepository repository;
-
+  /// 创建[RecordingsBloc]实例
   RecordingsBloc({
-    required this.getRecordings,
-    required this.deleteRecordings,
-    required this.repository,
-  }) : super(RecordingsState.initial()) {
+    required AppLogger logger,
+    required RecordingRepository recordingRepository,
+  })  : _logger = logger,
+        _recordingRepository = recordingRepository,
+        super(RecordingsState.initial()) {
     on<LoadRecordings>(_onLoadRecordings);
     on<DeleteRecordings>(_onDeleteRecordings);
-    on<UpdateRecording>(_onUpdateRecording);
-    on<SelectAllRecordings>(_onSelectAllRecordings);
+    on<DeleteSelectedRecordings>(_onDeleteSelectedRecordings);
+    on<EnterSelectionMode>(_onEnterSelectionMode);
+    on<ExitSelectionMode>(_onExitSelectionMode);
     on<ToggleRecordingSelection>(_onToggleRecordingSelection);
-    on<ToggleSelectionMode>(_onToggleSelectionMode);
+    on<ToggleSelectAll>(_onToggleSelectAll);
   }
+
+  final AppLogger _logger;
+  final RecordingRepository _recordingRepository;
 
   Future<void> _onLoadRecordings(
     LoadRecordings event,
     Emitter<RecordingsState> emit,
   ) async {
     try {
-      emit(state.copyWith(isLoading: true));
+      emit(state.copyWith(
+        isLoading: true,
+        error: null,
+      ));
 
-      final recordings = await getRecordings(
-        timeFilter: event.timeFilter,
-        durationFilter: event.durationFilter,
-        sortBy: event.sortBy,
-        ascending: event.ascending,
-      );
+      final recordings = await _recordingRepository.getRecordings();
 
       emit(state.copyWith(
-        isLoading: false,
         recordings: recordings,
+        isLoading: false,
       ));
-    } catch (e) {
+    } catch (e, s) {
+      _logger.e('加载录音列表失败', error: e, stackTrace: s);
       emit(state.copyWith(
         isLoading: false,
         error: e.toString(),
@@ -56,61 +58,87 @@ class RecordingsBloc extends Bloc<RecordingsEvent, RecordingsState> {
     Emitter<RecordingsState> emit,
   ) async {
     try {
-      final success = await deleteRecordings(event.ids);
-      if (success) {
-        final recordings = await getRecordings();
-        emit(state.copyWith(recordings: recordings));
-      }
-    } catch (e) {
-      emit(state.copyWith(error: e.toString()));
+      await _recordingRepository.deleteRecordings(event.ids);
+
+      final recordings = await _recordingRepository.getRecordings();
+
+      emit(state.copyWith(
+        recordings: recordings,
+      ));
+    } catch (e, s) {
+      _logger.e('删除录音失败', error: e, stackTrace: s);
+      emit(state.copyWith(
+        error: e.toString(),
+      ));
     }
   }
 
-  Future<void> _onUpdateRecording(
-    UpdateRecording event,
+  Future<void> _onDeleteSelectedRecordings(
+    DeleteSelectedRecordings event,
     Emitter<RecordingsState> emit,
   ) async {
     try {
-      final success = await repository.updateRecording(event.recording);
-      if (success) {
-        final recordings = await getRecordings();
-        emit(state.copyWith(recordings: recordings));
-      }
-    } catch (e) {
-      emit(state.copyWith(error: e.toString()));
+      await _recordingRepository.deleteRecordings(state.selectedRecordings);
+
+      final recordings = await _recordingRepository.getRecordings();
+
+      emit(state.copyWith(
+        recordings: recordings,
+        selectedRecordings: [],
+        isSelectionMode: false,
+      ));
+    } catch (e, s) {
+      _logger.e('删除选中的录音失败', error: e, stackTrace: s);
+      emit(state.copyWith(
+        error: e.toString(),
+      ));
     }
   }
 
-  void _onSelectAllRecordings(
-    SelectAllRecordings event,
+  void _onEnterSelectionMode(
+    EnterSelectionMode event,
     Emitter<RecordingsState> emit,
   ) {
-    final selectedIds = event.selectAll
-        ? state.recordings.map((r) => r.id).toSet()
-        : <String>{};
-    emit(state.copyWith(selectedIds: selectedIds));
+    emit(state.copyWith(
+      isSelectionMode: true,
+    ));
+  }
+
+  void _onExitSelectionMode(
+    ExitSelectionMode event,
+    Emitter<RecordingsState> emit,
+  ) {
+    emit(state.copyWith(
+      isSelectionMode: false,
+      selectedRecordings: [],
+    ));
   }
 
   void _onToggleRecordingSelection(
     ToggleRecordingSelection event,
     Emitter<RecordingsState> emit,
   ) {
-    final selectedIds = Set<String>.from(state.selectedIds);
-    if (event.selected) {
-      selectedIds.add(event.id);
+    final selectedRecordings = List<String>.from(state.selectedRecordings);
+    if (selectedRecordings.contains(event.id)) {
+      selectedRecordings.remove(event.id);
     } else {
-      selectedIds.remove(event.id);
+      selectedRecordings.add(event.id);
     }
-    emit(state.copyWith(selectedIds: selectedIds));
+    emit(state.copyWith(
+      selectedRecordings: selectedRecordings,
+    ));
   }
 
-  void _onToggleSelectionMode(
-    ToggleSelectionMode event,
+  void _onToggleSelectAll(
+    ToggleSelectAll event,
     Emitter<RecordingsState> emit,
   ) {
+    final selectedRecordings =
+        state.selectedRecordings.length == state.recordings.length
+            ? <String>[]
+            : state.recordings.map((e) => e.id).toList();
     emit(state.copyWith(
-      isSelectionMode: event.enabled,
-      selectedIds: event.enabled ? state.selectedIds : {},
+      selectedRecordings: selectedRecordings,
     ));
   }
 }
