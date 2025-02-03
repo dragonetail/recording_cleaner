@@ -1,36 +1,73 @@
 {
     "project": {
-        "name": "AndroidCleaner",
-        "description": "安卓垃圾文件删除app",
-        "type": "android",
-        "package": "com.blackharry.androidcleaner",
-        "minSdkVersion": 24,
-        "targetSdkVersion": 33
+        "name": "FlutterCleaner",
+        "description": "录音文件删除app",
+        "type": "flutter",
+        "minSdkVersion": {
+            "android": 24,
+            "ios": 12
+        },
+        "targetSdkVersion": {
+            "android": 33,
+            "ios": 17
+        }
     },
     "architecture": {
-        "pattern": "MVVM",
+        "pattern": "Clean Architecture + BLoC",
         "components": {
-            "view": {
-                "location": "*.ui",
-                "naming": "*Fragment|*Activity",
-                "baseClass": "Fragment|AppCompatActivity"
+            "presentation": {
+                "location": "lib/presentation",
+                "components": {
+                    "pages": {
+                        "location": "pages",
+                        "naming": "*Page",
+                        "baseClass": "StatelessWidget|StatefulWidget"
+                    },
+                    "widgets": {
+                        "location": "widgets",
+                        "naming": "*Widget",
+                        "baseClass": "StatelessWidget|StatefulWidget"
+                    },
+                    "blocs": {
+                        "location": "blocs",
+                        "naming": "*Bloc",
+                        "baseClass": "Bloc<*Event, *State>"
+                    }
+                }
             },
-            "viewModel": {
-                "location": "*.ui",
-                "naming": "*ViewModel",
-                "baseClass": "AndroidViewModel|ViewModel"
+            "domain": {
+                "location": "lib/domain",
+                "components": {
+                    "entities": {
+                        "location": "entities",
+                        "naming": "*Entity"
+                    },
+                    "repositories": {
+                        "location": "repositories",
+                        "naming": "*Repository"
+                    },
+                    "usecases": {
+                        "location": "usecases",
+                        "naming": "*UseCase"
+                    }
+                }
             },
-            "repository": {
-                "location": "*.data",
-                "naming": "*Repository"
-            },
-            "entity": {
-                "location": "*.data",
-                "naming": "*Entity"
-            },
-            "dao": {
-                "location": "*.data",
-                "naming": "*Dao"
+            "data": {
+                "location": "lib/data",
+                "components": {
+                    "models": {
+                        "location": "models",
+                        "naming": "*Model"
+                    },
+                    "repositories": {
+                        "location": "repositories",
+                        "naming": "*RepositoryImpl"
+                    },
+                    "sources": {
+                        "location": "sources",
+                        "naming": "*Source"
+                    }
+                }
             }
         }
     },
@@ -43,14 +80,14 @@
             "common"
         ],
         "common": {
-            "utils": "common.utils",
-            "exception": "common.exception"
+            "utils": "core/utils",
+            "exception": "core/error"
         }
     },
     "coding": {
         "style": {
-            "indentation": "4 spaces",
-            "lineLength": 100,
+            "indentation": "2 spaces",
+            "lineLength": 80,
             "braces": "same line"
         },
         "naming": {
@@ -58,42 +95,81 @@
             "method": "camelCase",
             "variable": "camelCase",
             "constant": "UPPER_SNAKE_CASE",
-            "package": "lowercase"
+            "package": "lowercase",
+            "private": "_camelCase"
         },
         "logging": {
-            "tool": "LogUtils",
+            "tool": "logger",
             "levels": ["v", "d", "i", "w", "e"],
             "format": "中文描述",
             "methodTracing": {
-                "enter": "logMethodEnter",
-                "exit": "logMethodExit",
-                "error": "logError",
-                "performance": "logPerformance"
+                "enter": "@logMethodEnter",
+                "exit": "@logMethodExit",
+                "error": "@logError",
+                "performance": "@logPerformance"
             }
         }
     },
     "dependencies": {
-        "androidx": {
-            "core": "latest",
-            "appcompat": "latest",
-            "lifecycle": "latest",
-            "room": "latest",
-            "navigation": "latest"
+        "flutter": {
+            "sdk": "latest"
         },
-        "material": "latest"
+        "flutter_localizations": {
+            "sdk": "latest"
+        },
+        "ui": {
+            "cupertino_icons": "^1.0.8",
+            "flutter_screenutil": "^5.9.0",
+            "google_fonts": "^6.2.1"
+        },
+        "state_management": {
+            "flutter_bloc": "^8.1.4",
+            "equatable": "^2.0.5",
+            "provider": "^6.1.2"
+        },
+        "routing": {
+            "go_router": "^13.2.0"
+        },
+        "storage": {
+            "isar": "^3.1.0+1",
+            "isar_flutter_libs": "^3.1.0+1",
+            "path_provider": "^2.1.2",
+            "shared_preferences": "^2.2.2"
+        },
+        "network": {
+            "dio": "^5.4.1",
+            "connectivity_plus": "^5.0.2"
+        },
+        "utils": {
+            "logger": "^2.0.2+1",
+            "intl": "^0.18.1",
+            "permission_handler": "^11.3.0",
+            "package_info_plus": "^5.0.1",
+            "device_info_plus": "^9.1.2"
+        },
+        "audio": {
+            "just_audio": "^0.9.36",
+            "audio_session": "^0.1.18",
+            "record": "^5.0.4"
+        }
     },
     "testing": {
         "required": true,
         "frameworks": [
-            "JUnit",
-            "Espresso"
+            "flutter_test",
+            "integration_test",
+            "bloc_test",
+            "mockito"
         ],
         "coverage": 80
     },
     "linting": {
-        "ignorePatterns": [
-            "The declared package \"com.blackharry.androidcleaner\" does not match the expected package"
-        ]
+        "rules": {
+            "always_use_package_imports": true,
+            "avoid_print": true,
+            "prefer_single_quotes": true,
+            "sort_child_properties_last": true
+        }
     },
     "development": {
         "principles": {
@@ -117,28 +193,6 @@
                     "newFeature",
                     "designChange"
                 ]
-            },
-            "changeProcess": {
-                "newFeatures": "userInitiated",
-                "requireApproval": true,
-                "preserveDesign": true
-            },
-            "resourceManagement": {
-                "resourceAddition": {
-                    "checkReferences": true,
-                    "autoCreateMissing": true,
-                    "validateCompilation": true
-                },
-                "resourceModification": {
-                    "analyzeUsage": true,
-                    "cleanupUnused": true,
-                    "validateCompilation": true
-                },
-                "resourceDeletion": {
-                    "analyzeReferences": true,
-                    "cleanupOrphaned": true,
-                    "validateCompilation": true
-                }
             }
         },
         "logging": {
@@ -189,18 +243,7 @@
                 "configChange",
                 "codeChange"
             ]
-        },
-        "composerPrinciples": {
-            "conciseness": true,
-            "contextSelection": "README.md",
-            "commands": {
-                "compile": "./gradlew installDebug",
-                "run": "./run-app.sh"
-            }
         }
-    },
-    "androidCode": {
-        "useLatestImplementation": true
     },
     "materialDesign3": {
         "version": "1.9.0",
@@ -211,132 +254,110 @@
                 "enforceColorSystem": true
             },
             "accessibility": {
-                "minTouchTarget": "48dp",
+                "minTouchTarget": 48,
                 "minTextContrast": 4.5,
                 "enforceContentDescriptions": true
             }
         },
         "components": {
             "buttons": {
-                "preferred": "MaterialButton",
+                "preferred": "ElevatedButton",
                 "attributes": {
-                    "cornerRadius": "8dp",
-                    "minHeight": "48dp",
-                    "textAppearance": "?attr/textAppearanceButton"
+                    "style": "ElevatedButton.styleFrom",
+                    "padding": "EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h)",
+                    "shape": "RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r))"
                 },
                 "variants": {
                     "primary": {
-                        "style": "Widget.Material3.Button",
+                        "style": "primary",
                         "usage": "主要操作按钮"
                     },
                     "secondary": {
-                        "style": "Widget.Material3.Button.OutlinedButton",
+                        "style": "secondary",
                         "usage": "次要操作按钮"
                     },
                     "text": {
-                        "style": "Widget.Material3.Button.TextButton",
+                        "style": "text",
                         "usage": "文本按钮"
                     }
                 }
             },
             "cards": {
-                "preferred": "MaterialCardView",
+                "preferred": "Card",
                 "attributes": {
-                    "cornerRadius": "12dp",
-                    "elevation": "2dp",
-                    "contentPadding": "16dp"
-                },
-                "variants": {
-                    "standard": {
-                        "style": "Widget.Material3.CardView.Elevated",
-                        "usage": "标准信息展示"
-                    },
-                    "flat": {
-                        "style": "Widget.Material3.CardView.Filled",
-                        "usage": "扁平信息展示"
-                    },
-                    "outlined": {
-                        "style": "Widget.Material3.CardView.Outlined",
-                        "usage": "边框式信息展示"
-                    }
+                    "elevation": 2,
+                    "shape": "RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r))",
+                    "margin": "EdgeInsets.all(8.w)",
+                    "child": "Padding(padding: EdgeInsets.all(16.w))"
                 }
             },
             "selection": {
                 "checkbox": {
-                    "preferred": "MaterialCheckBox",
-                    "style": "Widget.Material3.CompoundButton.CheckBox",
-                    "customStyle": "CustomCheckBox",
+                    "preferred": "Checkbox",
                     "attributes": {
-                        "minSize": "24dp",
-                        "background": "@null",
-                        "buttonTint": "@null"
+                        "materialTapTargetSize": "MaterialTapTargetSize.padded",
+                        "visualDensity": "VisualDensity.standard"
                     }
                 },
-                "radioButton": {
-                    "preferred": "MaterialRadioButton",
-                    "style": "Widget.Material3.CompoundButton.RadioButton",
+                "radio": {
+                    "preferred": "Radio",
                     "attributes": {
-                        "minSize": "24dp"
+                        "materialTapTargetSize": "MaterialTapTargetSize.padded",
+                        "visualDensity": "VisualDensity.standard"
                     }
                 },
                 "switch": {
-                    "preferred": "MaterialSwitch",
-                    "style": "Widget.Material3.CompoundButton.Switch"
+                    "preferred": "Switch",
+                    "attributes": {
+                        "materialTapTargetSize": "MaterialTapTargetSize.padded",
+                        "visualDensity": "VisualDensity.standard"
+                    }
                 }
             },
             "textFields": {
-                "preferred": "TextInputLayout",
-                "style": "Widget.Material3.TextInputLayout.OutlinedBox",
+                "preferred": "TextField",
                 "attributes": {
-                    "boxCornerRadius": "4dp",
-                    "boxStrokeWidth": "1dp"
+                    "decoration": "InputDecoration",
+                    "style": "TextStyle",
+                    "cursorColor": "Theme.of(context).colorScheme.primary"
                 }
             },
-            "toolbars": {
-                "preferred": "MaterialToolbar",
-                "style": "Widget.Material3.Toolbar",
-                "customStyle": "ThemeOverlay.App.Toolbar.Center",
+            "appBar": {
+                "preferred": "AppBar",
                 "attributes": {
-                    "elevation": "4dp",
-                    "titleCentered": true
+                    "elevation": 0,
+                    "centerTitle": true,
+                    "backgroundColor": "Theme.of(context).colorScheme.surface"
                 }
             }
         },
         "layout": {
             "spacing": {
-                "grid": "8dp",
-                "content": "16dp",
-                "section": "24dp"
+                "small": "8.w",
+                "medium": "16.w",
+                "large": "24.w"
             },
             "containers": {
-                "preferred": "ConstraintLayout",
-                "alternatives": ["LinearLayout", "FrameLayout"]
+                "preferred": [
+                    "Column",
+                    "Row",
+                    "Stack",
+                    "Expanded",
+                    "Flexible"
+                ]
             }
-        },
-        "themes": {
-            "enforceAttributes": true,
-            "baseTheme": "Theme.Material3.Light.NoActionBar",
-            "customTheme": "Theme.App",
-            "enforceColorSystem": true
         }
     },
     "codeStyle": {
-        "xml": {
-            "attributes": {
+        "dart": {
+            "imports": {
                 "order": [
-                    "android:id",
-                    "android:layout_width",
-                    "android:layout_height",
-                    "style",
-                    "android:layout_margin.*",
-                    "android:padding.*",
-                    "android:background",
-                    "android:src",
-                    "android:text",
-                    "android:textAppearance",
-                    "android:visibility",
-                    "app:layout_constraint.*"
-                ]
+                    "dart:.*",
+                    "package:flutter/.*",
+                    "package:.*",
+                    ".*"
+                ],
+                "separate": true
             }
         }
     },
@@ -404,9 +425,9 @@
             "enabled": true
         },
         "build": {
-            "compile": "./gradlew installDebug",
-            "cleanCompile": "./gradlew clean installDebug",
-            "run": "./run-app.sh"
+            "compile": "flutter run",
+            "cleanCompile": "flutter clean && flutter pub get && flutter run",
+            "run": "flutter run"
         },
         "documentation": {
             "autoValidateAndUpdate": true,
@@ -432,34 +453,14 @@
             ],
             "autoCommit": true,
             "autoPush": true
-        },
-        "historySearch": {
-            "maxResults": 10,
-            "displayFields": [
-                "序号",
-                "日志文件名",
-                "履历时间",
-                "履历摘要"
-            ],
-            "highlight": true
-        },
-        "todoSearch": {
-            "highlightFirstUnfinished": true
-        },
-        "todoComplete": {
-            "autoUpdate": true,
-            "gitIntegration": {
-                "autoCommit": true,
-                "autoPush": true
-            }
         }
     },
     "cursorAI": {
         "commands": {
             "submit": "自动提交所有修改的代码并推送到GIT",
-            "compile": "./gradlew installDebug",
-            "cleanCompile": "./gradlew clean installDebug",
-            "run": "./run-app.sh",
+            "compile": "flutter run",
+            "cleanCompile": "flutter clean && flutter pub get && flutter run",
+            "run": "flutter run",
             "document": "自动校验和更新所有目录下的README文档，没有的自动生成",
             "comment": "自动补全代码注释，并每更新10个文件自动提交一次GIT",
             "check": {
