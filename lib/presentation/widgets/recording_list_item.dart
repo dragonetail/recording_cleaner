@@ -3,6 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:recording_cleaner/domain/entities/recording_entity.dart';
 import 'package:recording_cleaner/presentation/blocs/audio_player/audio_player_bloc.dart';
+import 'package:recording_cleaner/presentation/blocs/audio_player/audio_player_event.dart'
+    as events;
+import 'package:recording_cleaner/presentation/blocs/audio_player/audio_player_state.dart'
+    as states;
 import 'package:recording_cleaner/presentation/widgets/recording_actions_menu.dart';
 import 'package:recording_cleaner/presentation/widgets/recording_info_dialog.dart';
 import 'package:recording_cleaner/presentation/widgets/recording_rename_dialog.dart';
@@ -11,6 +15,7 @@ import 'package:intl/intl.dart';
 
 class RecordingListItem extends StatelessWidget {
   final RecordingEntity recording;
+  final AudioPlayerBloc audioPlayerBloc;
   final bool isSelectionMode;
   final bool isSelected;
   final VoidCallback? onLongPress;
@@ -21,6 +26,7 @@ class RecordingListItem extends StatelessWidget {
   const RecordingListItem({
     Key? key,
     required this.recording,
+    required this.audioPlayerBloc,
     this.isSelectionMode = false,
     this.isSelected = false,
     this.onLongPress,
@@ -100,174 +106,58 @@ class RecordingListItem extends StatelessWidget {
     }
   }
 
-  Widget _buildPlayButton(BuildContext context, AudioPlayerState state) {
-    if (state is AudioPlayerLoading &&
-        (state is AudioPlayerPlaying || state is AudioPlayerPaused) &&
-        (state as dynamic).filePath == recording.path) {
-      return SizedBox(
-        width: 24.w,
-        height: 24.w,
-        child: CircularProgressIndicator(
-          strokeWidth: 2.w,
-          valueColor: AlwaysStoppedAnimation<Color>(
-            Theme.of(context).colorScheme.primary,
-          ),
-        ),
-      );
-    }
-
-    final bool isPlaying =
-        state is AudioPlayerPlaying && state.filePath == recording.path;
-
-    return IconButton(
-      icon: Icon(
-        isPlaying ? Icons.pause_circle : Icons.play_circle,
-        color: Theme.of(context).colorScheme.primary,
-      ),
-      onPressed: () {
-        if (isPlaying) {
-          context.read<AudioPlayerBloc>().add(PauseAudio());
-        } else {
-          context.read<AudioPlayerBloc>().add(PlayAudio(recording.path));
-        }
-      },
-    );
-  }
-
-  Widget _buildProgressBar(BuildContext context, AudioPlayerState state) {
-    if (!(state is AudioPlayerPlaying || state is AudioPlayerPaused) ||
-        (state as dynamic).filePath != recording.path) {
-      return const SizedBox.shrink();
-    }
-
-    final Duration position = (state is AudioPlayerPlaying)
-        ? (state as AudioPlayerPlaying).position
-        : (state as AudioPlayerPaused).position;
-
-    final Duration? duration = (state is AudioPlayerPlaying)
-        ? (state as AudioPlayerPlaying).duration
-        : (state as AudioPlayerPaused).duration;
-
-    return Column(
-      children: [
-        SizedBox(height: 8.h),
-        Row(
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      child: ListTile(
+        title: Text(recording.name),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              _formatDuration(position),
+              '创建时间：${recording.createdAt.toString().substring(0, 19)}',
               style: Theme.of(context).textTheme.bodySmall,
             ),
-            Expanded(
-              child: Slider(
-                value: position.inMilliseconds.toDouble(),
-                min: 0,
-                max: duration?.inMilliseconds.toDouble() ??
-                    recording.duration.inMilliseconds.toDouble(),
-                onChanged: (value) {
-                  context.read<AudioPlayerBloc>().add(
-                        SeekAudio(Duration(milliseconds: value.toInt())),
-                      );
-                },
-              ),
+            Text(
+              '大小：${(recording.size / 1024 / 1024).toStringAsFixed(2)}MB',
+              style: Theme.of(context).textTheme.bodySmall,
             ),
             Text(
-              _formatDuration(duration ?? recording.duration),
+              '时长：${recording.duration.toString().split('.').first}',
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
         ),
-      ],
-    );
-  }
+        trailing: StreamBuilder<states.AudioPlayerState>(
+          stream: audioPlayerBloc.stream,
+          builder: (context, snapshot) {
+            final state = snapshot.data;
+            final isPlaying = state is states.AudioPlayerPlaying &&
+                state.filePath == recording.path;
+            final isPaused = state is states.AudioPlayerPaused &&
+                state.filePath == recording.path;
 
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<AudioPlayerBloc, AudioPlayerState>(
-      builder: (context, state) {
-        return GestureDetector(
-          onLongPress: onLongPress,
-          child: Container(
-            padding: EdgeInsets.all(16.w),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(12.r),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).shadowColor.withOpacity(0.1),
-                  blurRadius: 4.r,
-                  offset: Offset(0, 2.h),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    if (isSelectionMode)
-                      Checkbox(
-                        value: isSelected,
-                        onChanged: (value) =>
-                            onSelectionChanged?.call(value ?? false),
-                      )
-                    else
-                      _buildPlayButton(context, state),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            recording.name,
-                            style: Theme.of(context).textTheme.titleMedium,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          SizedBox(height: 4.h),
-                          Text(
-                            DateFormat('yyyy-MM-dd HH:mm')
-                                .format(recording.createdAt),
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ],
-                      ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          _formatFileSize(recording.size),
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          _formatDuration(recording.duration),
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
-                    if (!isSelectionMode) ...[
-                      SizedBox(width: 8.w),
-                      RecordingActionsMenu(
-                        recording: recording,
-                        onRename: onRename != null
-                            ? () => _showRenameDialog(context)
-                            : null,
-                        onShare: () => _shareRecording(),
-                        onInfo: () => _showInfoDialog(context),
-                        onDelete: onDelete != null
-                            ? () => _showDeleteConfirmation(context)
-                            : null,
-                      ),
-                    ],
-                  ],
-                ),
-                _buildProgressBar(context, state),
-              ],
-            ),
-          ),
-        );
-      },
+            return IconButton(
+              icon: Icon(
+                isPlaying ? Icons.pause : Icons.play_arrow,
+                color: isPlaying || isPaused
+                    ? Theme.of(context).colorScheme.primary
+                    : null,
+              ),
+              onPressed: () {
+                if (isPlaying) {
+                  audioPlayerBloc.add(const events.PauseAudio());
+                } else if (isPaused) {
+                  audioPlayerBloc.add(const events.ResumeAudio());
+                } else {
+                  audioPlayerBloc.add(events.PlayAudio(recording.path));
+                }
+              },
+            );
+          },
+        ),
+      ),
     );
   }
 }

@@ -1,125 +1,34 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:equatable/equatable.dart';
 import 'package:recording_cleaner/domain/services/audio_player_service.dart';
-import 'package:just_audio/just_audio.dart';
+import 'package:recording_cleaner/presentation/blocs/audio_player/audio_player_event.dart';
+import 'package:recording_cleaner/presentation/blocs/audio_player/audio_player_state.dart';
 
-// Events
-abstract class AudioPlayerEvent extends Equatable {
-  const AudioPlayerEvent();
-
-  @override
-  List<Object?> get props => [];
-}
-
-class PlayAudio extends AudioPlayerEvent {
-  final String filePath;
-
-  const PlayAudio(this.filePath);
-
-  @override
-  List<Object?> get props => [filePath];
-}
-
-class PauseAudio extends AudioPlayerEvent {}
-
-class StopAudio extends AudioPlayerEvent {}
-
-class SeekAudio extends AudioPlayerEvent {
-  final Duration position;
-
-  const SeekAudio(this.position);
-
-  @override
-  List<Object?> get props => [position];
-}
-
-// States
-abstract class AudioPlayerState extends Equatable {
-  const AudioPlayerState();
-
-  @override
-  List<Object?> get props => [];
-}
-
-class AudioPlayerInitial extends AudioPlayerState {}
-
-class AudioPlayerLoading extends AudioPlayerState {}
-
-class AudioPlayerPlaying extends AudioPlayerState {
-  final String filePath;
-  final Duration position;
-  final Duration? duration;
-
-  const AudioPlayerPlaying({
-    required this.filePath,
-    required this.position,
-    this.duration,
-  });
-
-  @override
-  List<Object?> get props => [filePath, position, duration];
-
-  AudioPlayerPlaying copyWith({
-    String? filePath,
-    Duration? position,
-    Duration? duration,
-  }) {
-    return AudioPlayerPlaying(
-      filePath: filePath ?? this.filePath,
-      position: position ?? this.position,
-      duration: duration ?? this.duration,
-    );
-  }
-}
-
-class AudioPlayerPaused extends AudioPlayerState {
-  final String filePath;
-  final Duration position;
-  final Duration? duration;
-
-  const AudioPlayerPaused({
-    required this.filePath,
-    required this.position,
-    this.duration,
-  });
-
-  @override
-  List<Object?> get props => [filePath, position, duration];
-}
-
-class AudioPlayerStopped extends AudioPlayerState {}
-
-class AudioPlayerError extends AudioPlayerState {
-  final String message;
-
-  const AudioPlayerError(this.message);
-
-  @override
-  List<Object?> get props => [message];
-}
-
-// BLoC
+/// 音频播放BLoC
 class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
   final AudioPlayerService _playerService;
   StreamSubscription<Duration>? _positionSubscription;
-  StreamSubscription<PlayerState>? _playerStateSubscription;
+  String? _currentFilePath;
 
-  AudioPlayerBloc({required AudioPlayerService playerService})
-      : _playerService = playerService,
+  AudioPlayerBloc({
+    required AudioPlayerService playerService,
+  })  : _playerService = playerService,
         super(AudioPlayerInitial()) {
     on<PlayAudio>(_onPlayAudio);
     on<PauseAudio>(_onPauseAudio);
+    on<ResumeAudio>(_onResumeAudio);
     on<StopAudio>(_onStopAudio);
     on<SeekAudio>(_onSeekAudio);
 
-    _playerStateSubscription = _playerService.playerStateStream.listen(
-      (playerState) {
-        if (playerState.processingState == ProcessingState.completed) {
-          add(StopAudio());
-        }
-      },
-    );
+    _positionSubscription = _playerService.positionStream.listen((position) {
+      if (state is AudioPlayerPlaying && _currentFilePath != null) {
+        emit(AudioPlayerPlaying(
+          filePath: _currentFilePath!,
+          position: position,
+          duration: _playerService.duration ?? Duration.zero,
+        ));
+      }
+    });
   }
 
   Future<void> _onPlayAudio(
@@ -127,22 +36,13 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
     Emitter<AudioPlayerState> emit,
   ) async {
     try {
-      emit(AudioPlayerLoading());
+      emit(AudioPlayerLoading(event.filePath));
       await _playerService.play(event.filePath);
-
-      _positionSubscription?.cancel();
-      _positionSubscription = _playerService.positionStream.listen(
-        (position) {
-          if (state is AudioPlayerPlaying) {
-            emit((state as AudioPlayerPlaying).copyWith(position: position));
-          }
-        },
-      );
-
+      _currentFilePath = event.filePath;
       emit(AudioPlayerPlaying(
         filePath: event.filePath,
         position: Duration.zero,
-        duration: _playerService.duration,
+        duration: _playerService.duration ?? Duration.zero,
       ));
     } catch (e) {
       emit(AudioPlayerError(e.toString()));
@@ -153,14 +53,31 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
     PauseAudio event,
     Emitter<AudioPlayerState> emit,
   ) async {
-    if (state is AudioPlayerPlaying) {
+    if (state is AudioPlayerPlaying && _currentFilePath != null) {
       try {
-        final currentState = state as AudioPlayerPlaying;
         await _playerService.pause();
         emit(AudioPlayerPaused(
-          filePath: currentState.filePath,
-          position: currentState.position,
-          duration: currentState.duration,
+          filePath: _currentFilePath!,
+          position: (state as AudioPlayerPlaying).position,
+          duration: (state as AudioPlayerPlaying).duration,
+        ));
+      } catch (e) {
+        emit(AudioPlayerError(e.toString()));
+      }
+    }
+  }
+
+  Future<void> _onResumeAudio(
+    ResumeAudio event,
+    Emitter<AudioPlayerState> emit,
+  ) async {
+    if (state is AudioPlayerPaused && _currentFilePath != null) {
+      try {
+        await _playerService.play(_currentFilePath!);
+        emit(AudioPlayerPlaying(
+          filePath: _currentFilePath!,
+          position: (state as AudioPlayerPaused).position,
+          duration: (state as AudioPlayerPaused).duration,
         ));
       } catch (e) {
         emit(AudioPlayerError(e.toString()));
@@ -174,8 +91,7 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
   ) async {
     try {
       await _playerService.stop();
-      _positionSubscription?.cancel();
-      _positionSubscription = null;
+      _currentFilePath = null;
       emit(AudioPlayerStopped());
     } catch (e) {
       emit(AudioPlayerError(e.toString()));
@@ -186,18 +102,21 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
     SeekAudio event,
     Emitter<AudioPlayerState> emit,
   ) async {
-    if (state is AudioPlayerPlaying || state is AudioPlayerPaused) {
+    if ((state is AudioPlayerPlaying || state is AudioPlayerPaused) &&
+        _currentFilePath != null) {
       try {
         await _playerService.seek(event.position);
         if (state is AudioPlayerPlaying) {
-          emit(
-              (state as AudioPlayerPlaying).copyWith(position: event.position));
-        } else if (state is AudioPlayerPaused) {
-          final currentState = state as AudioPlayerPaused;
-          emit(AudioPlayerPaused(
-            filePath: currentState.filePath,
+          emit(AudioPlayerPlaying(
+            filePath: _currentFilePath!,
             position: event.position,
-            duration: currentState.duration,
+            duration: (state as AudioPlayerPlaying).duration,
+          ));
+        } else {
+          emit(AudioPlayerPaused(
+            filePath: _currentFilePath!,
+            position: event.position,
+            duration: (state as AudioPlayerPaused).duration,
           ));
         }
       } catch (e) {
@@ -207,10 +126,9 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
   }
 
   @override
-  Future<void> close() async {
-    await _positionSubscription?.cancel();
-    await _playerStateSubscription?.cancel();
-    await _playerService.dispose();
+  Future<void> close() {
+    _positionSubscription?.cancel();
+    _playerService.dispose();
     return super.close();
   }
 }

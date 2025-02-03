@@ -1,73 +1,69 @@
 import 'package:equatable/equatable.dart';
 import 'package:recording_cleaner/domain/entities/recording_entity.dart';
 
-abstract class RecordingsState extends Equatable {
-  const RecordingsState();
+/// 录音列表状态
+class RecordingsState extends Equatable {
+  /// 是否正在加载
+  final bool isLoading;
 
-  @override
-  List<Object?> get props => [];
-}
-
-class RecordingsInitial extends RecordingsState {}
-
-class RecordingsLoading extends RecordingsState {}
-
-class RecordingsLoaded extends RecordingsState {
+  /// 录音列表
   final List<RecordingEntity> recordings;
-  final bool isSelectionMode;
-  final Set<String> selectedIds;
-  final String? timeFilter;
-  final String? durationFilter;
-  final String? sortBy;
-  final bool? ascending;
 
-  const RecordingsLoaded({
-    required this.recordings,
+  /// 错误信息
+  final String? error;
+
+  /// 是否处于选择模式
+  final bool isSelectionMode;
+
+  /// 已选择的录音ID集合
+  final Set<String> selectedIds;
+
+  /// 创建[RecordingsState]实例
+  const RecordingsState({
+    this.isLoading = false,
+    this.recordings = const [],
+    this.error,
     this.isSelectionMode = false,
     this.selectedIds = const {},
-    this.timeFilter,
-    this.durationFilter,
-    this.sortBy,
-    this.ascending,
   });
+
+  /// 初始状态
+  factory RecordingsState.initial() => const RecordingsState();
+
+  /// 加载中状态
+  factory RecordingsState.loading() => const RecordingsState(isLoading: true);
+
+  /// 加载成功状态
+  factory RecordingsState.loaded(List<RecordingEntity> recordings) =>
+      RecordingsState(recordings: recordings);
+
+  /// 加载失败状态
+  factory RecordingsState.error(String message) =>
+      RecordingsState(error: message);
+
+  /// 复制并创建新实例
+  RecordingsState copyWith({
+    bool? isLoading,
+    List<RecordingEntity>? recordings,
+    String? error,
+    bool? isSelectionMode,
+    Set<String>? selectedIds,
+  }) {
+    return RecordingsState(
+      isLoading: isLoading ?? this.isLoading,
+      recordings: recordings ?? this.recordings,
+      error: error ?? this.error,
+      isSelectionMode: isSelectionMode ?? this.isSelectionMode,
+      selectedIds: selectedIds ?? this.selectedIds,
+    );
+  }
 
   @override
   List<Object?> get props => [
+        isLoading,
         recordings,
+        error,
         isSelectionMode,
         selectedIds,
-        timeFilter,
-        durationFilter,
-        sortBy,
-        ascending,
       ];
-
-  RecordingsLoaded copyWith({
-    List<RecordingEntity>? recordings,
-    bool? isSelectionMode,
-    Set<String>? selectedIds,
-    String? timeFilter,
-    String? durationFilter,
-    String? sortBy,
-    bool? ascending,
-  }) {
-    return RecordingsLoaded(
-      recordings: recordings ?? this.recordings,
-      isSelectionMode: isSelectionMode ?? this.isSelectionMode,
-      selectedIds: selectedIds ?? this.selectedIds,
-      timeFilter: timeFilter ?? this.timeFilter,
-      durationFilter: durationFilter ?? this.durationFilter,
-      sortBy: sortBy ?? this.sortBy,
-      ascending: ascending ?? this.ascending,
-    );
-  }
-}
-
-class RecordingsError extends RecordingsState {
-  final String message;
-
-  const RecordingsError(this.message);
-
-  @override
-  List<Object?> get props => [message];
 }

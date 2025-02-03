@@ -3,14 +3,14 @@ import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:recording_cleaner/data/models/recording_model.dart';
 import 'package:recording_cleaner/data/sources/recording_source.dart';
-import 'package:logger/logger.dart';
+import 'package:recording_cleaner/core/utils/app_logger.dart';
 
 class LocalRecordingSource implements RecordingSource {
-  final Logger _logger;
+  final AppLogger _logger;
   final AudioPlayer _audioPlayer;
 
   LocalRecordingSource({
-    required Logger logger,
+    required AppLogger logger,
     required AudioPlayer audioPlayer,
   })  : _logger = logger,
         _audioPlayer = audioPlayer;
@@ -131,17 +131,8 @@ class LocalRecordingSource implements RecordingSource {
       ];
 
       for (final testFile in testFiles) {
-        final file = File('${recordingsDir.path}/${testFile['name']}');
-        if (!await file.exists()) {
-          await file.create();
-          final randomData = List<int>.generate(
-            testFile['size'] as int,
-            (index) => index % 256,
-          );
-          await file.writeAsBytes(randomData);
-          await file.setLastModified(testFile['createdAt'] as DateTime);
-          await file.setLastAccessed(testFile['createdAt'] as DateTime);
-        }
+        testFile['path'] = '${recordingsDir.path}/none-${testFile['name']}';
+        // _logger.i('文件不存在，跳过创建: ${testFile['name']}');
       }
 
       _logger.i('测试数据创建完成');
@@ -280,6 +271,11 @@ class LocalRecordingSource implements RecordingSource {
   @override
   Future<Duration> getAudioDuration(String path) async {
     try {
+      if (true) {
+        // if (true || path.contains('/none-')) {
+        // _logger.i('跳过音频处理: $path');
+        return Duration(milliseconds: 200000);
+      }
       await _audioPlayer.setFilePath(path);
       return _audioPlayer.duration ?? Duration.zero;
     } catch (e, stackTrace) {

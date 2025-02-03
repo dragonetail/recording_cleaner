@@ -1,13 +1,13 @@
 import 'package:just_audio/just_audio.dart';
-import 'package:logger/logger.dart';
+import 'package:recording_cleaner/core/utils/app_logger.dart';
 
 class AudioPlayerService {
   final AudioPlayer _player;
-  final Logger _logger;
+  final AppLogger _logger;
 
   AudioPlayerService({
     required AudioPlayer player,
-    required Logger logger,
+    required AppLogger logger,
   })  : _player = player,
         _logger = logger;
 

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:logger/logger.dart';
+import 'package:recording_cleaner/core/utils/app_logger.dart';
 import 'package:recording_cleaner/domain/entities/recording_entity.dart';
 import 'package:recording_cleaner/domain/services/audio_player_service.dart';
 import 'package:recording_cleaner/presentation/blocs/audio_player/audio_player_bloc.dart';
@@ -22,7 +22,6 @@ class RecordingsPage extends StatefulWidget {
 
 class _RecordingsPageState extends State<RecordingsPage> {
   late final AudioPlayer _audioPlayer;
-  late final Logger _logger;
   late final AudioPlayerService _audioPlayerService;
   late final AudioPlayerBloc _audioPlayerBloc;
   String? _currentTimeFilter;
@@ -34,10 +33,9 @@ class _RecordingsPageState extends State<RecordingsPage> {
   void initState() {
     super.initState();
     _audioPlayer = AudioPlayer();
-    _logger = Logger();
     _audioPlayerService = AudioPlayerService(
       player: _audioPlayer,
-      logger: _logger,
+      logger: appLogger,
     );
     _audioPlayerBloc = AudioPlayerBloc(playerService: _audioPlayerService);
 
@@ -87,198 +85,41 @@ class _RecordingsPageState extends State<RecordingsPage> {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => _audioPlayerBloc,
-      child: MultiBlocListener(
-        listeners: [
-          BlocListener<AudioPlayerBloc, AudioPlayerState>(
-            listener: (context, state) {
-              if (state is AudioPlayerError) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('播放错误: ${state.message}'),
-                    backgroundColor: Theme.of(context).colorScheme.error,
-                  ),
-                );
-              }
-            },
-          ),
-        ],
-        child: Scaffold(
-          appBar: AppBar(
-            title: BlocBuilder<RecordingsBloc, RecordingsState>(
-              builder: (context, state) {
-                if (state is RecordingsLoaded && state.isSelectionMode) {
-                  return Text('已选择 ${state.selectedIds.length} 项');
-                }
-                return const Text('录音列表');
-              },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('录音文件'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.filter_list),
+              onPressed: _showFilterDialog,
             ),
-            actions: [
-              BlocBuilder<RecordingsBloc, RecordingsState>(
-                builder: (context, state) {
-                  if (state is RecordingsLoaded) {
-                    if (state.isSelectionMode) {
-                      return Row(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.select_all),
-                            onPressed: () {
-                              context.read<RecordingsBloc>().add(
-                                    SelectAllRecordings(
-                                      state.selectedIds.length !=
-                                          state.recordings.length,
-                                    ),
-                                  );
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: state.selectedIds.isEmpty
-                                ? null
-                                : () {
-                                    context.read<RecordingsBloc>().add(
-                                          DeleteRecordings(
-                                            state.selectedIds.toList(),
-                                          ),
-                                        );
-                                    context.read<RecordingsBloc>().add(
-                                          ToggleSelectionMode(false),
-                                        );
-                                  },
-                          ),
-                        ],
-                      );
-                    }
-                    return IconButton(
-                      icon: const Icon(Icons.filter_list),
-                      onPressed: _showFilterDialog,
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
-              ),
-            ],
-          ),
-          body: BlocBuilder<RecordingsBloc, RecordingsState>(
-            builder: (context, state) {
-              if (state is RecordingsLoading) {
-                return const Center(child: CircularProgressIndicator());
-              }
+          ],
+        ),
+        body: BlocBuilder<RecordingsBloc, RecordingsState>(
+          builder: (context, state) {
+            if (state.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-              if (state is RecordingsError) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.error_outline,
-                        size: 48,
-                        color: Colors.red,
-                      ),
-                      SizedBox(height: 16.h),
-                      Text(
-                        '加载失败: ${state.message}',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      SizedBox(height: 16.h),
-                      ElevatedButton(
-                        onPressed: () {
-                          context.read<RecordingsBloc>().add(
-                                const LoadRecordings(),
-                              );
-                        },
-                        child: const Text('重试'),
-                      ),
-                    ],
-                  ),
+            if (state.error != null) {
+              return Center(child: Text('加载失败：${state.error}'));
+            }
+
+            if (state.recordings.isEmpty) {
+              return const Center(child: Text('暂无录音文件'));
+            }
+
+            return ListView.builder(
+              itemCount: state.recordings.length,
+              itemBuilder: (context, index) {
+                final recording = state.recordings[index];
+                return RecordingListItem(
+                  recording: recording,
+                  audioPlayerBloc: context.read<AudioPlayerBloc>(),
                 );
-              }
-
-              if (state is RecordingsLoaded) {
-                if (state.recordings.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.mic_none,
-                          size: 48.w,
-                          color: Theme.of(context).colorScheme.outline,
-                        ),
-                        SizedBox(height: 16.h),
-                        Text(
-                          '暂无录音',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(
-                                color: Theme.of(context).colorScheme.outline,
-                              ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                return RefreshIndicator(
-                  onRefresh: () async {
-                    context.read<RecordingsBloc>().add(const LoadRecordings());
-                  },
-                  child: ListView.separated(
-                    padding: EdgeInsets.all(16.w),
-                    itemCount: state.recordings.length,
-                    separatorBuilder: (context, index) =>
-                        SizedBox(height: 12.h),
-                    itemBuilder: (context, index) {
-                      final recording = state.recordings[index];
-                      return RecordingListItem(
-                        recording: recording,
-                        isSelectionMode: state.isSelectionMode,
-                        isSelected: state.selectedIds.contains(recording.id),
-                        onLongPress: () {
-                          if (!state.isSelectionMode) {
-                            context.read<RecordingsBloc>().add(
-                                  ToggleSelectionMode(true),
-                                );
-                            context.read<RecordingsBloc>().add(
-                                  ToggleRecordingSelection(
-                                    recording.id,
-                                    true,
-                                  ),
-                                );
-                          }
-                        },
-                        onSelectionChanged: (selected) {
-                          context.read<RecordingsBloc>().add(
-                                ToggleRecordingSelection(
-                                  recording.id,
-                                  selected,
-                                ),
-                              );
-                        },
-                        onRename: (newName) {
-                          final newRecording =
-                              RecordingModel.fromEntity(recording).copyWith(
-                            name: newName,
-                            updatedAt: DateTime.now(),
-                          );
-                          context.read<RecordingsBloc>().add(
-                                UpdateRecording(newRecording),
-                              );
-                        },
-                        onDelete: (id) {
-                          context.read<RecordingsBloc>().add(
-                                DeleteRecordings([id]),
-                              );
-                        },
-                      );
-                    },
-                  ),
-                );
-              }
-
-              return const SizedBox.shrink();
-            },
-          ),
+              },
+            );
+          },
         ),
       ),
     );

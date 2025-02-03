@@ -37,6 +37,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_screenutil: ^5.9.0
   google_fonts: ^6.2.1
+  percent_indicator: ^4.2.3
 
   # 状态管理
   flutter_bloc: ^8.1.6
@@ -59,6 +60,8 @@ dependencies:
   permission_handler: ^11.3.0
   package_info_plus: ^8.1.4
   device_info_plus: ^11.2.2
+  stack_trace: ^1.11.1
+  path: ^1.9.0
 
   # 音频
   just_audio: ^0.9.36

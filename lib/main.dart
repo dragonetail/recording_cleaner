@@ -12,9 +12,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:logger/logger.dart';
+import 'package:recording_cleaner/core/utils/app_logger.dart';
+import 'package:recording_cleaner/data/repositories/call_recording_repository_impl.dart';
 import 'package:recording_cleaner/data/repositories/recording_repository_impl.dart';
+import 'package:recording_cleaner/data/sources/local_call_recording_source.dart';
 import 'package:recording_cleaner/data/sources/local_recording_source.dart';
+import 'package:recording_cleaner/domain/repositories/call_recording_repository.dart';
 import 'package:recording_cleaner/domain/repositories/recording_repository.dart';
 import 'package:recording_cleaner/domain/usecases/delete_recordings_usecase.dart';
 import 'package:recording_cleaner/domain/usecases/get_recordings_usecase.dart';
@@ -24,9 +27,6 @@ import 'package:recording_cleaner/presentation/pages/overview_page.dart';
 import 'package:recording_cleaner/presentation/pages/recordings_page.dart';
 import 'package:recording_cleaner/presentation/pages/calls_page.dart';
 import 'package:recording_cleaner/presentation/pages/contacts_page.dart';
-
-/// 全局日志记录器实例
-final logger = Logger();
 
 /// 应用程序入口函数
 ///
@@ -39,24 +39,31 @@ final logger = Logger();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  logger.i('应用启动');
+  appLogger.i('应用启动');
 
   // 初始化依赖
   final audioPlayer = AudioPlayer();
   final recordingSource = LocalRecordingSource(
-    logger: logger,
+    logger: appLogger,
+    audioPlayer: audioPlayer,
+  );
+  final callRecordingSource = LocalCallRecordingSource(
+    logger: appLogger,
     audioPlayer: audioPlayer,
   );
   final recordingRepository = RecordingRepositoryImpl(recordingSource);
+  final callRecordingRepository =
+      CallRecordingRepositoryImpl(callRecordingSource);
   final getRecordingsUseCase = GetRecordingsUseCase(recordingRepository);
   final deleteRecordingsUseCase = DeleteRecordingsUseCase(recordingRepository);
 
   // 创建测试数据
   await recordingSource.createTestData();
+  await callRecordingSource.createTestData();
 
   runApp(MyApp(
-    logger: logger,
     repository: recordingRepository,
+    callRecordingRepository: callRecordingRepository,
     getRecordingsUseCase: getRecordingsUseCase,
     deleteRecordingsUseCase: deleteRecordingsUseCase,
   ));
@@ -76,11 +83,11 @@ void main() async {
 /// 使用[MaterialApp]配置应用程序的基本属性
 /// {@endtemplate}
 class MyApp extends StatelessWidget {
-  /// 全局日志记录器
-  final Logger logger;
-
   /// 录音文件仓库接口
   final RecordingRepository repository;
+
+  /// 通话录音仓库接口
+  final CallRecordingRepository callRecordingRepository;
 
   /// 获取录音文件用例
   final GetRecordingsUseCase getRecordingsUseCase;
@@ -90,55 +97,58 @@ class MyApp extends StatelessWidget {
 
   const MyApp({
     super.key,
-    required this.logger,
     required this.repository,
+    required this.callRecordingRepository,
     required this.getRecordingsUseCase,
     required this.deleteRecordingsUseCase,
   });
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider<RecordingsBloc>(
-          create: (context) => RecordingsBloc(
-            getRecordings: getRecordingsUseCase,
-            deleteRecordings: deleteRecordingsUseCase,
-            repository: repository,
-          )..add(const LoadRecordings()),
-        ),
-      ],
-      child: ScreenUtilInit(
-        designSize: const Size(360, 690),
-        minTextAdapt: true,
-        splitScreenMode: true,
-        builder: (context, child) {
-          return MaterialApp(
-            title: 'FlutterCleaner',
-            debugShowCheckedModeBanner: false,
-            theme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-              useMaterial3: true,
-            ),
-            localizationsDelegates: const [
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            supportedLocales: const [
-              Locale('zh', 'CN'),
-            ],
-            home: BlocProvider<RecordingsBloc>(
+    return ScreenUtilInit(
+      designSize: const Size(360, 690),
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) {
+        return MaterialApp(
+          title: 'FlutterCleaner',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+            useMaterial3: true,
+          ),
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('zh', 'CN'),
+          ],
+          home: child,
+        );
+      },
+      child: MultiRepositoryProvider(
+        providers: [
+          RepositoryProvider<RecordingRepository>(
+            create: (context) => repository,
+          ),
+          RepositoryProvider<CallRecordingRepository>(
+            create: (context) => callRecordingRepository,
+          ),
+        ],
+        child: MultiBlocProvider(
+          providers: [
+            BlocProvider<RecordingsBloc>(
               create: (context) => RecordingsBloc(
                 getRecordings: getRecordingsUseCase,
                 deleteRecordings: deleteRecordingsUseCase,
                 repository: repository,
               )..add(const LoadRecordings()),
-              child: child,
             ),
-          );
-        },
-        child: const MainPage(),
+          ],
+          child: const MainPage(),
+        ),
       ),
     );
   }

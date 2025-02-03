@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:recording_cleaner/domain/entities/recording_entity.dart';
 
+/// 录音列表事件基类
 abstract class RecordingsEvent extends Equatable {
   const RecordingsEvent();
 
@@ -8,6 +9,7 @@ abstract class RecordingsEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+/// 加载录音列表事件
 class LoadRecordings extends RecordingsEvent {
   final String? timeFilter;
   final String? durationFilter;
@@ -25,6 +27,7 @@ class LoadRecordings extends RecordingsEvent {
   List<Object?> get props => [timeFilter, durationFilter, sortBy, ascending];
 }
 
+/// 删除录音事件
 class DeleteRecordings extends RecordingsEvent {
   final List<String> ids;
 
@@ -34,6 +37,7 @@ class DeleteRecordings extends RecordingsEvent {
   List<Object?> get props => [ids];
 }
 
+/// 更新录音事件
 class UpdateRecording extends RecordingsEvent {
   final RecordingEntity recording;
 
@@ -43,6 +47,7 @@ class UpdateRecording extends RecordingsEvent {
   List<Object?> get props => [recording];
 }
 
+/// 切换选择模式事件
 class ToggleSelectionMode extends RecordingsEvent {
   final bool enabled;
 
@@ -52,6 +57,7 @@ class ToggleSelectionMode extends RecordingsEvent {
   List<Object?> get props => [enabled];
 }
 
+/// 切换录音选择状态事件
 class ToggleRecordingSelection extends RecordingsEvent {
   final String id;
   final bool selected;
@@ -62,6 +68,7 @@ class ToggleRecordingSelection extends RecordingsEvent {
   List<Object?> get props => [id, selected];
 }
 
+/// 全选/取消全选事件
 class SelectAllRecordings extends RecordingsEvent {
   final bool selectAll;
 
