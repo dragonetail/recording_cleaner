@@ -1,34 +1,89 @@
 import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:recording_cleaner/domain/services/audio_player_service.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:path/path.dart' as path;
+import 'package:recording_cleaner/core/utils/app_logger.dart';
 import 'package:recording_cleaner/presentation/blocs/audio_player/audio_player_event.dart';
 import 'package:recording_cleaner/presentation/blocs/audio_player/audio_player_state.dart';
 
-/// 音频播放BLoC
+/// 音频播放器 BLoC
 class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
-  final AudioPlayerService _playerService;
-  StreamSubscription<Duration>? _positionSubscription;
-  String? _currentFilePath;
-
+  /// 创建[AudioPlayerBloc]实例
   AudioPlayerBloc({
-    required AudioPlayerService playerService,
-  })  : _playerService = playerService,
-        super(AudioPlayerInitial()) {
+    required AppLogger logger,
+  })  : _logger = logger,
+        _player = AudioPlayer(),
+        super(AudioPlayerState.initial()) {
+    on<LoadAudioFile>(_onLoadAudioFile);
     on<PlayAudio>(_onPlayAudio);
     on<PauseAudio>(_onPauseAudio);
-    on<ResumeAudio>(_onResumeAudio);
-    on<StopAudio>(_onStopAudio);
     on<SeekAudio>(_onSeekAudio);
+    on<UpdatePosition>(_onUpdatePosition);
+    on<UpdateDuration>(_onUpdateDuration);
+    on<UpdatePlayingState>(_onUpdatePlayingState);
+    on<AudioCompleted>(_onAudioCompleted);
+    on<AudioError>(_onAudioError);
 
-    _positionSubscription = _playerService.positionStream.listen((position) {
-      if (state is AudioPlayerPlaying && _currentFilePath != null) {
-        emit(AudioPlayerPlaying(
-          filePath: _currentFilePath!,
-          position: position,
-          duration: _playerService.duration ?? Duration.zero,
-        ));
+    _player.positionStream.listen((position) {
+      add(UpdatePosition(position));
+    });
+
+    _player.durationStream.listen((duration) {
+      if (duration != null) {
+        add(UpdateDuration(duration));
       }
     });
+
+    _player.playingStream.listen((isPlaying) {
+      add(UpdatePlayingState(isPlaying));
+    });
+
+    _player.playerStateStream.listen((playerState) {
+      if (playerState.processingState == ProcessingState.completed) {
+        add(const AudioCompleted());
+      }
+    });
+  }
+
+  final AppLogger _logger;
+  final AudioPlayer _player;
+
+  @override
+  Future<void> close() async {
+    await _player.dispose();
+    return super.close();
+  }
+
+  Future<void> _onLoadAudioFile(
+    LoadAudioFile event,
+    Emitter<AudioPlayerState> emit,
+  ) async {
+    try {
+      emit(state.copyWith(
+        isLoading: true,
+        error: null,
+      ));
+
+      final file = File(event.filePath);
+      if (!await file.exists()) {
+        throw '文件不存在';
+      }
+
+      await _player.setFilePath(event.filePath);
+
+      emit(state.copyWith(
+        fileName: path.basename(event.filePath),
+        isLoading: false,
+      ));
+    } catch (e, s) {
+      _logger.e('加载音频文件失败', error: e, stackTrace: s);
+      emit(state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      ));
+    }
   }
 
   Future<void> _onPlayAudio(
@@ -36,16 +91,10 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
     Emitter<AudioPlayerState> emit,
   ) async {
     try {
-      emit(AudioPlayerLoading(event.filePath));
-      await _playerService.play(event.filePath);
-      _currentFilePath = event.filePath;
-      emit(AudioPlayerPlaying(
-        filePath: event.filePath,
-        position: Duration.zero,
-        duration: _playerService.duration ?? Duration.zero,
-      ));
-    } catch (e) {
-      emit(AudioPlayerError(e.toString()));
+      await _player.play();
+    } catch (e, s) {
+      _logger.e('播放音频失败', error: e, stackTrace: s);
+      emit(state.copyWith(error: e.toString()));
     }
   }
 
@@ -53,48 +102,11 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
     PauseAudio event,
     Emitter<AudioPlayerState> emit,
   ) async {
-    if (state is AudioPlayerPlaying && _currentFilePath != null) {
-      try {
-        await _playerService.pause();
-        emit(AudioPlayerPaused(
-          filePath: _currentFilePath!,
-          position: (state as AudioPlayerPlaying).position,
-          duration: (state as AudioPlayerPlaying).duration,
-        ));
-      } catch (e) {
-        emit(AudioPlayerError(e.toString()));
-      }
-    }
-  }
-
-  Future<void> _onResumeAudio(
-    ResumeAudio event,
-    Emitter<AudioPlayerState> emit,
-  ) async {
-    if (state is AudioPlayerPaused && _currentFilePath != null) {
-      try {
-        await _playerService.play(_currentFilePath!);
-        emit(AudioPlayerPlaying(
-          filePath: _currentFilePath!,
-          position: (state as AudioPlayerPaused).position,
-          duration: (state as AudioPlayerPaused).duration,
-        ));
-      } catch (e) {
-        emit(AudioPlayerError(e.toString()));
-      }
-    }
-  }
-
-  Future<void> _onStopAudio(
-    StopAudio event,
-    Emitter<AudioPlayerState> emit,
-  ) async {
     try {
-      await _playerService.stop();
-      _currentFilePath = null;
-      emit(AudioPlayerStopped());
-    } catch (e) {
-      emit(AudioPlayerError(e.toString()));
+      await _player.pause();
+    } catch (e, s) {
+      _logger.e('暂停音频失败', error: e, stackTrace: s);
+      emit(state.copyWith(error: e.toString()));
     }
   }
 
@@ -102,33 +114,52 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
     SeekAudio event,
     Emitter<AudioPlayerState> emit,
   ) async {
-    if ((state is AudioPlayerPlaying || state is AudioPlayerPaused) &&
-        _currentFilePath != null) {
-      try {
-        await _playerService.seek(event.position);
-        if (state is AudioPlayerPlaying) {
-          emit(AudioPlayerPlaying(
-            filePath: _currentFilePath!,
-            position: event.position,
-            duration: (state as AudioPlayerPlaying).duration,
-          ));
-        } else {
-          emit(AudioPlayerPaused(
-            filePath: _currentFilePath!,
-            position: event.position,
-            duration: (state as AudioPlayerPaused).duration,
-          ));
-        }
-      } catch (e) {
-        emit(AudioPlayerError(e.toString()));
-      }
+    try {
+      await _player.seek(event.position);
+    } catch (e, s) {
+      _logger.e('音频定位失败', error: e, stackTrace: s);
+      emit(state.copyWith(error: e.toString()));
     }
   }
 
-  @override
-  Future<void> close() {
-    _positionSubscription?.cancel();
-    _playerService.dispose();
-    return super.close();
+  void _onUpdatePosition(
+    UpdatePosition event,
+    Emitter<AudioPlayerState> emit,
+  ) {
+    emit(state.copyWith(position: event.position));
+  }
+
+  void _onUpdateDuration(
+    UpdateDuration event,
+    Emitter<AudioPlayerState> emit,
+  ) {
+    emit(state.copyWith(duration: event.duration));
+  }
+
+  void _onUpdatePlayingState(
+    UpdatePlayingState event,
+    Emitter<AudioPlayerState> emit,
+  ) {
+    emit(state.copyWith(isPlaying: event.isPlaying));
+  }
+
+  void _onAudioCompleted(
+    AudioCompleted event,
+    Emitter<AudioPlayerState> emit,
+  ) {
+    emit(state.copyWith(
+      position: state.duration,
+      isPlaying: false,
+    ));
+  }
+
+  void _onAudioError(
+    AudioError event,
+    Emitter<AudioPlayerState> emit,
+  ) {
+    emit(state.copyWith(
+      error: event.error,
+      isPlaying: false,
+    ));
   }
 }

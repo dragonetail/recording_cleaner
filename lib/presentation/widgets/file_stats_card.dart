@@ -7,152 +7,190 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:recording_cleaner/presentation/blocs/overview/overview_state.dart';
+import 'package:percent_indicator/percent_indicator.dart';
+import 'package:recording_cleaner/core/utils/app_utils.dart';
 
 /// 文件统计卡片组件
 class FileStatsCard extends StatelessWidget {
-  /// 卡片标题
-  final String title;
+  /// 创建[FileStatsCard]实例
+  const FileStatsCard({
+    Key? key,
+    required this.icon,
+    required this.title,
+    required this.count,
+    required this.duration,
+    required this.size,
+    required this.totalSize,
+    this.color,
+    this.onTap,
+  }) : super(key: key);
 
   /// 图标
   final IconData icon;
 
-  /// 文件统计信息
-  final FileStats stats;
+  /// 标题
+  final String title;
 
-  /// 清理按钮点击回调
-  final VoidCallback onClean;
+  /// 文件数量
+  final int count;
 
-  /// 创建[FileStatsCard]实例
-  const FileStatsCard({
-    super.key,
-    required this.title,
-    required this.icon,
-    required this.stats,
-    required this.onClean,
-  });
+  /// 总时长
+  final Duration duration;
+
+  /// 总大小
+  final int size;
+
+  /// 总存储空间
+  final int totalSize;
+
+  /// 颜色
+  final Color? color;
+
+  /// 点击回调
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
+    final sizePercent = totalSize > 0 ? size / totalSize : 0.0;
+    final cardColor = color ?? colorScheme.primary;
 
     return Card(
-      child: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 标题
-            Row(
-              children: [
-                Icon(
-                  icon,
-                  color: colorScheme.primary,
-                  size: 24.w,
-                ),
-                SizedBox(width: 8.w),
-                Text(
-                  title,
-                  style: theme.textTheme.titleLarge,
-                ),
-              ],
-            ),
-            SizedBox(height: 16.h),
-
-            // 文件统计信息
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildFileStats(
-                  context,
-                  label: '总计',
-                  count: stats.totalCount,
-                  size: stats.totalSize,
-                  color: colorScheme.primary,
-                ),
-                _buildFileStats(
-                  context,
-                  label: '重要',
-                  count: stats.importantCount,
-                  size: stats.importantSize,
-                  color: colorScheme.secondary,
-                ),
-                _buildFileStats(
-                  context,
-                  label: '可清理',
-                  count: stats.cleanableCount,
-                  size: stats.cleanableSize,
-                  color: colorScheme.error,
-                ),
-              ],
-            ),
-            SizedBox(height: 16.h),
-
-            // 清理按钮
-            if (stats.cleanableCount > 0)
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: onClean,
-                  icon: const Icon(Icons.cleaning_services),
-                  label: Text('清理 ${_formatSize(stats.cleanableSize)}'),
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8.r),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    icon,
+                    color: cardColor,
+                    size: 24.w,
+                  ),
+                  SizedBox(width: 8.w),
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 24.h),
+              CircularPercentIndicator(
+                radius: 70.w,
+                lineWidth: 12.w,
+                percent: sizePercent,
+                backgroundColor: colorScheme.surfaceVariant,
+                progressColor: cardColor,
+                circularStrokeCap: CircularStrokeCap.round,
+                animation: true,
+                animationDuration: 1000,
+                center: Container(
+                  width: 100.w,
+                  height: 100.w,
+                  decoration: BoxDecoration(
+                    color: colorScheme.surface,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: colorScheme.shadow.withOpacity(0.1),
+                        blurRadius: 6.r,
+                        offset: Offset(0, 2.h),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        count.toString(),
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              color: cardColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      SizedBox(height: 2.h),
+                      Text(
+                        '文件',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: colorScheme.outline,
+                            ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-          ],
+              SizedBox(height: 20.h),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceVariant.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Column(
+                  children: [
+                    _buildStatItem(
+                      context,
+                      icon: Icons.timer_rounded,
+                      label: '总时长',
+                      value: AppUtils.formatDuration(duration),
+                      color: cardColor,
+                    ),
+                    SizedBox(height: 8.h),
+                    _buildStatItem(
+                      context,
+                      icon: Icons.data_usage_rounded,
+                      label: '总大小',
+                      value: AppUtils.formatFileSize(size),
+                      color: cardColor,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  /// 构建文件统计信息项
-  Widget _buildFileStats(
+  Widget _buildStatItem(
     BuildContext context, {
+    required IconData icon,
     required String label,
-    required int count,
-    required int size,
+    required String value,
     required Color color,
   }) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
       children: [
-        Text(
-          label,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+        Icon(
+          icon,
+          size: 16.w,
+          color: color.withOpacity(0.8),
+        ),
+        SizedBox(width: 6.w),
+        Expanded(
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.outline,
+                ),
           ),
         ),
-        SizedBox(height: 4.h),
         Text(
-          '$count个',
-          style: theme.textTheme.titleMedium?.copyWith(
-            color: color,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        SizedBox(height: 4.h),
-        Text(
-          _formatSize(size),
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: color,
-          ),
+          value,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w500,
+              ),
         ),
       ],
     );
-  }
-
-  /// 格式化文件大小
-  String _formatSize(int bytes) {
-    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-    var size = bytes.toDouble();
-    var unit = 0;
-
-    while (size >= 1024 && unit < units.length - 1) {
-      size /= 1024;
-      unit++;
-    }
-
-    return '${size.toStringAsFixed(2)} ${units[unit]}';
   }
 }
