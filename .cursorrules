@@ -1,0 +1,515 @@
+{
+    "project": {
+        "name": "AndroidCleaner",
+        "description": "安卓垃圾文件删除app",
+        "type": "android",
+        "package": "com.blackharry.androidcleaner",
+        "minSdkVersion": 24,
+        "targetSdkVersion": 33
+    },
+    "architecture": {
+        "pattern": "MVVM",
+        "components": {
+            "view": {
+                "location": "*.ui",
+                "naming": "*Fragment|*Activity",
+                "baseClass": "Fragment|AppCompatActivity"
+            },
+            "viewModel": {
+                "location": "*.ui",
+                "naming": "*ViewModel",
+                "baseClass": "AndroidViewModel|ViewModel"
+            },
+            "repository": {
+                "location": "*.data",
+                "naming": "*Repository"
+            },
+            "entity": {
+                "location": "*.data",
+                "naming": "*Entity"
+            },
+            "dao": {
+                "location": "*.data",
+                "naming": "*Dao"
+            }
+        }
+    },
+    "structure": {
+        "modules": [
+            "overview",
+            "recordings",
+            "calls",
+            "contacts",
+            "common"
+        ],
+        "common": {
+            "utils": "common.utils",
+            "exception": "common.exception"
+        }
+    },
+    "coding": {
+        "style": {
+            "indentation": "4 spaces",
+            "lineLength": 100,
+            "braces": "same line"
+        },
+        "naming": {
+            "class": "PascalCase",
+            "method": "camelCase",
+            "variable": "camelCase",
+            "constant": "UPPER_SNAKE_CASE",
+            "package": "lowercase"
+        },
+        "logging": {
+            "tool": "LogUtils",
+            "levels": ["v", "d", "i", "w", "e"],
+            "format": "中文描述",
+            "methodTracing": {
+                "enter": "logMethodEnter",
+                "exit": "logMethodExit",
+                "error": "logError",
+                "performance": "logPerformance"
+            }
+        }
+    },
+    "dependencies": {
+        "androidx": {
+            "core": "latest",
+            "appcompat": "latest",
+            "lifecycle": "latest",
+            "room": "latest",
+            "navigation": "latest"
+        },
+        "material": "latest"
+    },
+    "testing": {
+        "required": true,
+        "frameworks": [
+            "JUnit",
+            "Espresso"
+        ],
+        "coverage": 80
+    },
+    "linting": {
+        "ignorePatterns": [
+            "The declared package \"com.blackharry.androidcleaner\" does not match the expected package"
+        ]
+    },
+    "development": {
+        "principles": {
+            "standardsPriority": {
+                "enabled": true,
+                "rules": [
+                    "materialDesign3规范具有最高优先级",
+                    "用户需求与规范冲突时应遵循规范",
+                    "需要及时提醒用户调整不符合规范的需求",
+                    "对规范的任何偏离需要明确理由和文档说明"
+                ]
+            },
+            "featureControl": {
+                "allowedChanges": [
+                    "bugfix",
+                    "robustness",
+                    "logging",
+                    "documentation"
+                ],
+                "restrictedChanges": [
+                    "newFeature",
+                    "designChange"
+                ]
+            },
+            "changeProcess": {
+                "newFeatures": "userInitiated",
+                "requireApproval": true,
+                "preserveDesign": true
+            },
+            "resourceManagement": {
+                "resourceAddition": {
+                    "checkReferences": true,
+                    "autoCreateMissing": true,
+                    "validateCompilation": true
+                },
+                "resourceModification": {
+                    "analyzeUsage": true,
+                    "cleanupUnused": true,
+                    "validateCompilation": true
+                },
+                "resourceDeletion": {
+                    "analyzeReferences": true,
+                    "cleanupOrphaned": true,
+                    "validateCompilation": true
+                }
+            }
+        },
+        "logging": {
+            "language": "中文",
+            "required": {
+                "timestamp": true,
+                "thread": true,
+                "level": true,
+                "context": true
+            }
+        },
+        "robustness": {
+            "required": {
+                "errorHandling": true,
+                "exceptionHandling": true,
+                "crashHandling": true,
+                "performanceMonitoring": true
+            }
+        }
+    },
+    "interaction": {
+        "style": {
+            "responseStyle": "concise",
+            "focusOnCodeChanges": true,
+            "minimizeExplanations": true
+        },
+        "standardsCompliance": {
+            "enabled": true,
+            "actions": [
+                "检查用户需求是否符合Material Design 3规范",
+                "发现不符合规范时立即提醒用户",
+                "提供符合规范的替代方案",
+                "记录规范偏离的原因和决策"
+            ],
+            "priority": "highest"
+        },
+        "gitIntegration": {
+            "enabled": true,
+            "autoCommit": {
+                "trigger": "userCommand",
+                "keywords": ["提交"],
+                "autoPush": true
+            }
+        },
+        "autoCompileAndTest": {
+            "enabled": true,
+            "triggers": [
+                "configChange",
+                "codeChange"
+            ]
+        },
+        "composerPrinciples": {
+            "conciseness": true,
+            "contextSelection": "README.md",
+            "commands": {
+                "compile": "./gradlew installDebug",
+                "run": "./run-app.sh"
+            }
+        }
+    },
+    "androidCode": {
+        "useLatestImplementation": true
+    },
+    "materialDesign3": {
+        "version": "1.9.0",
+        "principles": {
+            "consistency": {
+                "enforceThemeAttributes": true,
+                "enforceStyleInheritance": true,
+                "enforceColorSystem": true
+            },
+            "accessibility": {
+                "minTouchTarget": "48dp",
+                "minTextContrast": 4.5,
+                "enforceContentDescriptions": true
+            }
+        },
+        "components": {
+            "buttons": {
+                "preferred": "MaterialButton",
+                "attributes": {
+                    "cornerRadius": "8dp",
+                    "minHeight": "48dp",
+                    "textAppearance": "?attr/textAppearanceButton"
+                },
+                "variants": {
+                    "primary": {
+                        "style": "Widget.Material3.Button",
+                        "usage": "主要操作按钮"
+                    },
+                    "secondary": {
+                        "style": "Widget.Material3.Button.OutlinedButton",
+                        "usage": "次要操作按钮"
+                    },
+                    "text": {
+                        "style": "Widget.Material3.Button.TextButton",
+                        "usage": "文本按钮"
+                    }
+                }
+            },
+            "cards": {
+                "preferred": "MaterialCardView",
+                "attributes": {
+                    "cornerRadius": "12dp",
+                    "elevation": "2dp",
+                    "contentPadding": "16dp"
+                },
+                "variants": {
+                    "standard": {
+                        "style": "Widget.Material3.CardView.Elevated",
+                        "usage": "标准信息展示"
+                    },
+                    "flat": {
+                        "style": "Widget.Material3.CardView.Filled",
+                        "usage": "扁平信息展示"
+                    },
+                    "outlined": {
+                        "style": "Widget.Material3.CardView.Outlined",
+                        "usage": "边框式信息展示"
+                    }
+                }
+            },
+            "selection": {
+                "checkbox": {
+                    "preferred": "MaterialCheckBox",
+                    "style": "Widget.Material3.CompoundButton.CheckBox",
+                    "customStyle": "CustomCheckBox",
+                    "attributes": {
+                        "minSize": "24dp",
+                        "background": "@null",
+                        "buttonTint": "@null"
+                    }
+                },
+                "radioButton": {
+                    "preferred": "MaterialRadioButton",
+                    "style": "Widget.Material3.CompoundButton.RadioButton",
+                    "attributes": {
+                        "minSize": "24dp"
+                    }
+                },
+                "switch": {
+                    "preferred": "MaterialSwitch",
+                    "style": "Widget.Material3.CompoundButton.Switch"
+                }
+            },
+            "textFields": {
+                "preferred": "TextInputLayout",
+                "style": "Widget.Material3.TextInputLayout.OutlinedBox",
+                "attributes": {
+                    "boxCornerRadius": "4dp",
+                    "boxStrokeWidth": "1dp"
+                }
+            },
+            "toolbars": {
+                "preferred": "MaterialToolbar",
+                "style": "Widget.Material3.Toolbar",
+                "customStyle": "ThemeOverlay.App.Toolbar.Center",
+                "attributes": {
+                    "elevation": "4dp",
+                    "titleCentered": true
+                }
+            }
+        },
+        "layout": {
+            "spacing": {
+                "grid": "8dp",
+                "content": "16dp",
+                "section": "24dp"
+            },
+            "containers": {
+                "preferred": "ConstraintLayout",
+                "alternatives": ["LinearLayout", "FrameLayout"]
+            }
+        },
+        "themes": {
+            "enforceAttributes": true,
+            "baseTheme": "Theme.Material3.Light.NoActionBar",
+            "customTheme": "Theme.App",
+            "enforceColorSystem": true
+        }
+    },
+    "codeStyle": {
+        "xml": {
+            "attributes": {
+                "order": [
+                    "android:id",
+                    "android:layout_width",
+                    "android:layout_height",
+                    "style",
+                    "android:layout_margin.*",
+                    "android:padding.*",
+                    "android:background",
+                    "android:src",
+                    "android:text",
+                    "android:textAppearance",
+                    "android:visibility",
+                    "app:layout_constraint.*"
+                ]
+            }
+        }
+    },
+    "directory_structure": {
+        "root": {
+            "readme": "README.md",
+            "description": "项目根目录，包含整体设计及开发原则"
+        }
+    },
+    "documentation": {
+        "README.md": {
+            "sections": [
+                { "title": "快速开始", "required": true },
+                { "title": "核心功能", "required": true },
+                { "title": "技术实现", "required": true },
+                { "title": "界面规范", "required": true },
+                { "title": "开发规范", "required": true },
+                { "title": "项目协作", "required": true },
+                { "title": "运维支持", "required": true },
+                { "title": "附录", "required": true },
+                { "title": "Cursor+AI相关", "required": true },
+                { "title": "更新日志", "required": true }
+            ]
+        }
+    },
+    "commit_rules": {
+        "message_format": "简洁明了，描述变更内容",
+        "require_issue_reference": false
+    },
+    "contribution_guidelines": {
+        "enabled": false
+    },
+    "miscellaneous": {
+        "enforce_consistency": true,
+        "require_review": true
+    },
+    "todoManagement": {
+        "file": "./TODO.md",
+        "autoRecord": true,
+        "recordContent": {
+            "fields": [
+                "序号",
+                "标题",
+                "记录时间",
+                "状态",
+                "摘要",
+                "详细描述",
+                "备注"
+            ],
+            "statusOptions": [
+                "未完成",
+                "进行中",
+                "已完成"
+            ]
+        },
+        "autoUpdate": true,
+        "gitIntegration": {
+            "autoCommit": true,
+            "autoPush": true
+        }
+    },
+    "automation": {
+        "commit": {
+            "description": "自动提交所有修改的代码并推送到GIT",
+            "enabled": true
+        },
+        "build": {
+            "compile": "./gradlew installDebug",
+            "cleanCompile": "./gradlew clean installDebug",
+            "run": "./run-app.sh"
+        },
+        "documentation": {
+            "autoValidateAndUpdate": true,
+            "generateMissing": true
+        },
+        "comments": {
+            "autoComplete": true,
+            "commitAfterFiles": 10
+        },
+        "codeCheck": {
+            "enabled": true,
+            "checkFile": "./qreports/check-<日期时间>.md",
+            "reportFile": "./qreports/report-<日期时间>.md",
+            "maxIssuesBeforePause": 5,
+            "checkPoints": [
+                "命名规范",
+                "代码规范",
+                "日志规范",
+                "注释规范及完善",
+                "潜在缺陷",
+                "性能隐患",
+                "安全问题"
+            ],
+            "autoCommit": true,
+            "autoPush": true
+        },
+        "historySearch": {
+            "maxResults": 10,
+            "displayFields": [
+                "序号",
+                "日志文件名",
+                "履历时间",
+                "履历摘要"
+            ],
+            "highlight": true
+        },
+        "todoSearch": {
+            "highlightFirstUnfinished": true
+        },
+        "todoComplete": {
+            "autoUpdate": true,
+            "gitIntegration": {
+                "autoCommit": true,
+                "autoPush": true
+            }
+        }
+    },
+    "cursorAI": {
+        "commands": {
+            "submit": "自动提交所有修改的代码并推送到GIT",
+            "compile": "./gradlew installDebug",
+            "cleanCompile": "./gradlew clean installDebug",
+            "run": "./run-app.sh",
+            "document": "自动校验和更新所有目录下的README文档，没有的自动生成",
+            "comment": "自动补全代码注释，并每更新10个文件自动提交一次GIT",
+            "check": {
+                "description": "自动检查代码中存在的问题，整理问题并提交给用户进行确认，根据反馈执行修复",
+                "steps": [
+                    "生成检查记录文件，文件名：[./qreports/check-<日期时间>.md]",
+                    "记录检查的目录、文件、问题等",
+                    "每次整理超过5个问题，停止检查，等待用户确认",
+                    "用户确认并修改后，提交GIT，然后继续检查",
+                    "生成问题报告文件，文件名：[./qreports/report-<日期时间>.md]",
+                    "报告内容简明，汇总问题分类，问题清单及要点描述",
+                    "自动追加到GIT"
+                ],
+                "checkPoints": [
+                    "命名规范",
+                    "代码规范",
+                    "日志规范",
+                    "注释规范及完善",
+                    "潜在缺陷",
+                    "性能隐患",
+                    "安全问题"
+                ]
+            }
+        }
+    },
+    "historyManagement": {
+        "directory": "./history",
+        "fileNaming": "history-<日期时间>.md",
+        "recordContent": {
+            "fields": [
+                "请求时间",
+                "请求内容",
+                "请求结果",
+                "请求耗时"
+            ]
+        },
+        "autoUpdate": true,
+        "gitIntegration": {
+            "autoCommit": true,
+            "autoPush": true
+        },
+        "search": {
+            "maxResults": 10,
+            "displayFields": [
+                "序号",
+                "日志文件名",
+                "履历时间",
+                "履历摘要"
+            ],
+            "highlight": true
+        }
+    }
+} 
