@@ -8,6 +8,7 @@
 /// @since 2024-03-20
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -27,6 +28,7 @@ import 'package:recording_cleaner/presentation/pages/overview_page.dart';
 import 'package:recording_cleaner/presentation/pages/recordings_page.dart';
 import 'package:recording_cleaner/presentation/pages/calls_page.dart';
 import 'package:recording_cleaner/presentation/pages/contacts_page.dart';
+import 'package:recording_cleaner/app.dart';
 
 /// 应用程序入口函数
 ///
@@ -36,37 +38,25 @@ import 'package:recording_cleaner/presentation/pages/contacts_page.dart';
 /// - 数据源和仓库的创建
 /// - 用例类的实例化
 /// - 测试数据的创建（仅用于开发阶段）
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  appLogger.i('应用启动');
-
-  // 初始化依赖
-  final audioPlayer = AudioPlayer();
-  final recordingSource = LocalRecordingSource(
-    logger: appLogger,
-    audioPlayer: audioPlayer,
+  // 设置状态栏和导航栏样式
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+    ),
   );
-  final callRecordingSource = LocalCallRecordingSource(
-    logger: appLogger,
-    audioPlayer: audioPlayer,
-  );
-  final recordingRepository = RecordingRepositoryImpl(recordingSource);
-  final callRecordingRepository =
-      CallRecordingRepositoryImpl(callRecordingSource);
-  final getRecordingsUseCase = GetRecordingsUseCase(recordingRepository);
-  final deleteRecordingsUseCase = DeleteRecordingsUseCase(recordingRepository);
 
-  // 创建测试数据
-  await recordingSource.createTestData();
-  await callRecordingSource.createTestData();
+  // 设置屏幕方向
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
 
-  runApp(MyApp(
-    repository: recordingRepository,
-    callRecordingRepository: callRecordingRepository,
-    getRecordingsUseCase: getRecordingsUseCase,
-    deleteRecordingsUseCase: deleteRecordingsUseCase,
-  ));
+  runApp(const App());
 }
 
 /// 应用程序根Widget
