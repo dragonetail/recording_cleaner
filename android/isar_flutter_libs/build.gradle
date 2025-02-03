@@ -1,0 +1,12 @@
+plugins {
+    id 'com.android.library'
+}
+
+android {
+    namespace 'com.isar.flutter'
+    compileSdk flutter.compileSdkVersion
+
+    defaultConfig {
+        minSdk flutter.minSdkVersion
+    }
+} 

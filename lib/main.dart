@@ -1,125 +1,213 @@
-import 'package:flutter/material.dart';
+/// FlutterCleaner应用程序
+///
+/// 这是一个用于管理和清理录音文件的Flutter应用程序。
+/// 应用采用Clean Architecture架构，使用BLoC进行状态管理。
+///
+/// @author blackharry
+/// @version 1.0.0
+/// @since 2024-03-20
 
-void main() {
-  runApp(const MyApp());
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:logger/logger.dart';
+import 'package:recording_cleaner/data/repositories/recording_repository_impl.dart';
+import 'package:recording_cleaner/data/sources/local_recording_source.dart';
+import 'package:recording_cleaner/domain/repositories/recording_repository.dart';
+import 'package:recording_cleaner/domain/usecases/delete_recordings_usecase.dart';
+import 'package:recording_cleaner/domain/usecases/get_recordings_usecase.dart';
+import 'package:recording_cleaner/presentation/blocs/recordings/recordings_bloc.dart';
+import 'package:recording_cleaner/presentation/blocs/recordings/recordings_event.dart';
+import 'package:recording_cleaner/presentation/pages/overview_page.dart';
+import 'package:recording_cleaner/presentation/pages/recordings_page.dart';
+import 'package:recording_cleaner/presentation/pages/calls_page.dart';
+import 'package:recording_cleaner/presentation/pages/contacts_page.dart';
+
+/// 全局日志记录器实例
+final logger = Logger();
+
+/// 应用程序入口函数
+///
+/// 负责初始化应用程序所需的所有依赖项，包括：
+/// - Widget绑定初始化
+/// - 音频播放器初始化
+/// - 数据源和仓库的创建
+/// - 用例类的实例化
+/// - 测试数据的创建（仅用于开发阶段）
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  logger.i('应用启动');
+
+  // 初始化依赖
+  final audioPlayer = AudioPlayer();
+  final recordingSource = LocalRecordingSource(
+    logger: logger,
+    audioPlayer: audioPlayer,
+  );
+  final recordingRepository = RecordingRepositoryImpl(recordingSource);
+  final getRecordingsUseCase = GetRecordingsUseCase(recordingRepository);
+  final deleteRecordingsUseCase = DeleteRecordingsUseCase(recordingRepository);
+
+  // 创建测试数据
+  await recordingSource.createTestData();
+
+  runApp(MyApp(
+    logger: logger,
+    repository: recordingRepository,
+    getRecordingsUseCase: getRecordingsUseCase,
+    deleteRecordingsUseCase: deleteRecordingsUseCase,
+  ));
 }
 
+/// 应用程序根Widget
+///
+/// 负责配置和初始化应用程序的全局设置，包括：
+/// - BLoC提供者的配置
+/// - 屏幕适配的设置
+/// - 主题的配置
+/// - 本地化的设置
+///
+/// {@template my_app}
+/// 使用[MultiBlocProvider]提供全局状态管理
+/// 使用[ScreenUtilInit]处理屏幕适配
+/// 使用[MaterialApp]配置应用程序的基本属性
+/// {@endtemplate}
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  /// 全局日志记录器
+  final Logger logger;
 
-  // This widget is the root of your application.
+  /// 录音文件仓库接口
+  final RecordingRepository repository;
+
+  /// 获取录音文件用例
+  final GetRecordingsUseCase getRecordingsUseCase;
+
+  /// 删除录音文件用例
+  final DeleteRecordingsUseCase deleteRecordingsUseCase;
+
+  const MyApp({
+    super.key,
+    required this.logger,
+    required this.repository,
+    required this.getRecordingsUseCase,
+    required this.deleteRecordingsUseCase,
+  });
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<RecordingsBloc>(
+          create: (context) => RecordingsBloc(
+            getRecordings: getRecordingsUseCase,
+            deleteRecordings: deleteRecordingsUseCase,
+            repository: repository,
+          )..add(const LoadRecordings()),
+        ),
+      ],
+      child: ScreenUtilInit(
+        designSize: const Size(360, 690),
+        minTextAdapt: true,
+        splitScreenMode: true,
+        builder: (context, child) {
+          return MaterialApp(
+            title: 'FlutterCleaner',
+            debugShowCheckedModeBanner: false,
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+              useMaterial3: true,
+            ),
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('zh', 'CN'),
+            ],
+            home: BlocProvider<RecordingsBloc>(
+              create: (context) => RecordingsBloc(
+                getRecordings: getRecordingsUseCase,
+                deleteRecordings: deleteRecordingsUseCase,
+                repository: repository,
+              )..add(const LoadRecordings()),
+              child: child,
+            ),
+          );
+        },
+        child: const MainPage(),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+/// 主页面Widget
+///
+/// 使用[IndexedStack]和[NavigationBar]实现底部导航
+/// 包含四个主要页面：
+/// - 概览页面
+/// - 录音页面
+/// - 通话页面
+/// - 联系人页面
+class MainPage extends StatefulWidget {
+  const MainPage({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<MainPage> createState() => _MainPageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+/// 主页面状态类
+///
+/// 管理底部导航栏的状态和页面切换
+class _MainPageState extends State<MainPage> {
+  /// 当前选中的导航项索引
+  int _currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: const [
+          OverviewPage(),
+          RecordingsPage(),
+          CallsPage(),
+          ContactsPage(),
+        ],
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: '概览',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.mic_outlined),
+            selectedIcon: Icon(Icons.mic),
+            label: '录音',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.call_outlined),
+            selectedIcon: Icon(Icons.call),
+            label: '通话',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.contacts_outlined),
+            selectedIcon: Icon(Icons.contacts),
+            label: '联系人',
+          ),
+        ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
