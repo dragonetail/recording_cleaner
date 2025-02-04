@@ -176,8 +176,50 @@ class ContactSourceImpl implements ContactSource {
   }
 
   @override
-  Future<void> createTestData() {
-    // Implementation needed
-    throw UnimplementedError();
+  Future<void> createTestData() async {
+    try {
+      final testData = [
+        ContactModel(
+          id: '1',
+          name: '张三',
+          phoneNumber: '13800138001',
+          category: ContactCategory.family,
+          isProtected: true,
+        ),
+        ContactModel(
+          id: '2',
+          name: '李四',
+          phoneNumber: '13800138002',
+          category: ContactCategory.friend,
+        ),
+        ContactModel(
+          id: '3',
+          name: '王五',
+          phoneNumber: '13800138003',
+          category: ContactCategory.colleague,
+        ),
+        ContactModel(
+          id: '4',
+          name: '赵六',
+          phoneNumber: '13800138004',
+          category: ContactCategory.customer,
+        ),
+        ContactModel(
+          id: '5',
+          name: '孙七',
+          phoneNumber: '13800138005',
+          category: ContactCategory.other,
+        ),
+      ];
+
+      await _isar.writeTxn(() async {
+        for (final contact in testData) {
+          await _isar.contactModels.put(contact);
+        }
+      });
+    } catch (e, s) {
+      _logger.e('创建测试数据失败', error: e, stackTrace: s);
+      rethrow;
+    }
   }
 }

@@ -7,52 +7,38 @@ class EmptyState extends StatelessWidget {
   /// 创建[EmptyState]实例
   const EmptyState({
     Key? key,
-    this.message = '暂无数据',
-    this.showAnimation = true,
-    this.onRefresh,
+    required this.message,
+    this.action,
   }) : super(key: key);
 
-  /// 提示文本
+  /// 提示信息
   final String message;
 
-  /// 是否显示动画
-  final bool showAnimation;
-
-  /// 刷新回调
-  final VoidCallback? onRefresh;
+  /// 操作按钮
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          if (showAnimation) ...[
-            SizedBox(
-              width: 200.w,
-              height: 200.w,
-              child: Lottie.asset(
-                'assets/animations/empty.json',
-                fit: BoxFit.contain,
-              ),
-            ),
-            SizedBox(height: 16.h),
-          ],
+          Icon(
+            Icons.inbox_rounded,
+            size: 64.w,
+            color: colorScheme.primary,
+          ),
+          SizedBox(height: 16.h),
           Text(
             message,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: colorScheme.outline,
-                ),
+            style: theme.textTheme.titleLarge,
           ),
-          if (onRefresh != null) ...[
+          if (action != null) ...[
             SizedBox(height: 16.h),
-            TextButton.icon(
-              onPressed: onRefresh,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('点击刷新'),
-            ),
+            action!,
           ],
         ],
       ),

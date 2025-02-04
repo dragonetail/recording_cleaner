@@ -42,4 +42,7 @@ abstract class ContactRepository {
 
   /// 根据电话号码查找联系人
   Future<ContactEntity?> findContactByPhoneNumber(String phoneNumber);
+
+  /// 创建测试数据
+  Future<void> createTestData();
 }

@@ -42,16 +42,24 @@ class ContactRepositoryImpl implements ContactRepository {
   }
 
   @override
-  Future<ContactEntity?> getContact(String id) {
-    return _contactSource.getContact(id);
+  Future<ContactEntity?> getContact(String id) async {
+    try {
+      final contact = await _contactSource.getContact(id);
+      return contact?.toEntity();
+    } catch (e, s) {
+      _logger.e('获取联系人失败', error: e, stackTrace: s);
+      rethrow;
+    }
   }
 
   @override
-  Future<bool> updateContact(ContactEntity contact) {
-    if (contact is ContactModel) {
-      return _contactSource.updateContact(contact);
+  Future<void> updateContact(ContactEntity contact) async {
+    try {
+      await _contactSource.updateContact(ContactModel.fromEntity(contact));
+    } catch (e, s) {
+      _logger.e('更新联系人失败', error: e, stackTrace: s);
+      rethrow;
     }
-    return _contactSource.updateContact(ContactModel.fromEntity(contact));
   }
 
   @override
@@ -59,12 +67,18 @@ class ContactRepositoryImpl implements ContactRepository {
     ContactCategory category, {
     int? limit,
     int? offset,
-  }) {
-    return _contactSource.getContactsByCategory(
-      category,
-      limit: limit,
-      offset: offset,
-    );
+  }) async {
+    try {
+      final contacts = await _contactSource.getContactsByCategory(
+        category,
+        limit: limit,
+        offset: offset,
+      );
+      return contacts.map((e) => e.toEntity()).toList();
+    } catch (e, s) {
+      _logger.e('获取指定分类的联系人列表失败', error: e, stackTrace: s);
+      rethrow;
+    }
   }
 
   @override
@@ -120,7 +134,24 @@ class ContactRepositoryImpl implements ContactRepository {
   }
 
   @override
-  Future<ContactEntity?> findContactByPhoneNumber(String phoneNumber) {
-    return _contactSource.findContactByPhoneNumber(phoneNumber);
+  Future<ContactEntity?> findContactByPhoneNumber(String phoneNumber) async {
+    try {
+      final contact =
+          await _contactSource.findContactByPhoneNumber(phoneNumber);
+      return contact?.toEntity();
+    } catch (e, s) {
+      _logger.e('根据电话号码查找联系人失败', error: e, stackTrace: s);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> createTestData() async {
+    try {
+      await _contactSource.createTestData();
+    } catch (e, s) {
+      _logger.e('创建测试数据失败', error: e, stackTrace: s);
+      rethrow;
+    }
   }
 }

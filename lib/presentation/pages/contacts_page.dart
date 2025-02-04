@@ -114,8 +114,23 @@ class _ContactsContent extends StatelessWidget {
                     },
                   )
                 : state.contacts.isEmpty
-                    ? const EmptyState(
+                    ? EmptyState(
                         message: '暂无联系人',
+                        action: TextButton.icon(
+                          onPressed: () async {
+                            final repository = await context
+                                .read<app_provider.RepositoryProvider>()
+                                .contactRepository;
+                            await repository.createTestData();
+                            if (context.mounted) {
+                              context
+                                  .read<ContactsBloc>()
+                                  .add(const LoadContacts());
+                            }
+                          },
+                          icon: const Icon(Icons.add_rounded),
+                          label: const Text('创建测试数据'),
+                        ),
                       )
                     : RefreshIndicator(
                         onRefresh: () async {
