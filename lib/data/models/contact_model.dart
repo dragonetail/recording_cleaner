@@ -9,7 +9,7 @@ import 'package:recording_cleaner/domain/entities/contact_entity.dart';
 part 'contact_model.g.dart';
 
 /// 联系人数据模型
-@collection
+@Collection()
 class ContactModel {
   /// 创建[ContactModel]实例
   ContactModel({
@@ -21,13 +21,18 @@ class ContactModel {
   });
 
   /// 联系人ID
-  @Id()
+  Id get isarId => fastHash(id);
+
+  /// 联系人ID
+  @Index(unique: true, replace: true)
   final String id;
 
   /// 联系人姓名
+  @Index(type: IndexType.value)
   final String name;
 
   /// 联系人电话号码
+  @Index(unique: true, replace: true)
   final String phoneNumber;
 
   /// 联系人分类
@@ -74,5 +79,21 @@ class ContactModel {
       category: category ?? this.category,
       isProtected: isProtected ?? this.isProtected,
     );
+  }
+
+  /// 计算字符串的哈希值
+  int fastHash(String string) {
+    var hash = 0xcbf29ce484222325;
+
+    var i = 0;
+    while (i < string.length) {
+      final codeUnit = string.codeUnitAt(i++);
+      hash ^= codeUnit >> 8;
+      hash *= 0x100000001b3;
+      hash ^= codeUnit & 0xFF;
+      hash *= 0x100000001b3;
+    }
+
+    return hash;
   }
 }
