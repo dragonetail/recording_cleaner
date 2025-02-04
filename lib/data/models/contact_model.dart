@@ -19,10 +19,9 @@ class ContactModel {
     required this.phoneNumber,
     this.category = ContactCategory.none,
     this.isProtected = false,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  })  : createdAt = createdAt ?? DateTime.now(),
-        updatedAt = updatedAt ?? DateTime.now();
+    required this.createdAt,
+    required this.updatedAt,
+  });
 
   /// 联系人ID
   Id get isarId => HashUtils.fastHash(id);
@@ -47,9 +46,11 @@ class ContactModel {
   final bool isProtected;
 
   /// 创建时间
+  @Index()
   final DateTime createdAt;
 
   /// 更新时间
+  @Index()
   final DateTime updatedAt;
 
   /// 从实体转换为数据模型
@@ -60,8 +61,8 @@ class ContactModel {
       phoneNumber: entity.phoneNumber,
       category: entity.category,
       isProtected: entity.isProtected,
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt,
+      createdAt: entity.createdAt ?? DateTime.now(),
+      updatedAt: entity.updatedAt ?? DateTime.now(),
     );
   }
 

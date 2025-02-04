@@ -3,27 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:recording_cleaner/domain/entities/contact_entity.dart';
 
-/// 联系人分类
-enum ContactCategory {
-  /// 未分类
-  none,
-
-  /// 家人
-  family,
-
-  /// 朋友
-  friend,
-
-  /// 同事
-  colleague,
-
-  /// 客户
-  customer,
-
-  /// 其他
-  other,
-}
-
 /// 联系人列表项组件
 class ContactListItem extends StatelessWidget {
   /// 创建[ContactListItem]实例
