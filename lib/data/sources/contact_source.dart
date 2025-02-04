@@ -97,6 +97,48 @@ class ContactSourceImpl implements ContactSource {
     }
   }
 
+  /// 获取单个联系人
+  Future<ContactModel?> getContact(String id) async {
+    try {
+      final contact = await _isar.contactModels.get(id);
+      return contact;
+    } catch (e, s) {
+      _logger.e('获取联系人失败', error: e, stackTrace: s);
+      rethrow;
+    }
+  }
+
+  /// 更新联系人
+  Future<void> updateContact(ContactModel contact) async {
+    try {
+      await _isar.writeTxn(() async {
+        await _isar.contactModels.put(contact);
+      });
+    } catch (e, s) {
+      _logger.e('更新联系人失败', error: e, stackTrace: s);
+      rethrow;
+    }
+  }
+
+  /// 获取指定分类的联系人
+  Future<List<ContactModel>> getContactsByCategory(
+    ContactCategory category, {
+    int? limit,
+    int? offset,
+  }) async {
+    try {
+      final contacts = await _isar.contactModels
+          .where()
+          .filter()
+          .categoryEqualTo(category)
+          .findAll();
+      return contacts;
+    } catch (e, s) {
+      _logger.e('获取指定分类的联系人列表失败', error: e, stackTrace: s);
+      rethrow;
+    }
+  }
+
   /// 更新联系人分类
   Future<void> updateContactCategory(
       String id, ContactCategory category) async {
@@ -133,16 +175,6 @@ class ContactSourceImpl implements ContactSource {
   }
 
   @override
-  Future<List<ContactModel>> getContactsByCategory(
-    ContactCategory category, {
-    int? limit,
-    int? offset,
-  }) {
-    // Implementation needed
-    throw UnimplementedError();
-  }
-
-  @override
   Future<bool> updateContactProtectionStrategy(
     String id,
     ProtectionStrategy strategy, {
@@ -169,9 +201,18 @@ class ContactSourceImpl implements ContactSource {
   }
 
   @override
-  Future<ContactModel?> findContactByPhoneNumber(String phoneNumber) {
-    // Implementation needed
-    throw UnimplementedError();
+  Future<ContactModel?> findContactByPhoneNumber(String phoneNumber) async {
+    try {
+      final contact = await _isar.contactModels
+          .where()
+          .filter()
+          .phoneNumberEqualTo(phoneNumber)
+          .findFirst();
+      return contact;
+    } catch (e, s) {
+      _logger.e('根据电话号码查找联系人失败', error: e, stackTrace: s);
+      rethrow;
+    }
   }
 
   @override
