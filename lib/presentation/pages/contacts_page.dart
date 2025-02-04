@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:recording_cleaner/core/constants/app_constants.dart';
+import 'package:provider/provider.dart';
+import 'package:recording_cleaner/core/providers/repository_provider.dart'
+    as app_provider;
 import 'package:recording_cleaner/core/utils/app_logger.dart';
+import 'package:recording_cleaner/domain/entities/contact_entity.dart';
 import 'package:recording_cleaner/presentation/blocs/contacts/contacts_bloc.dart';
 import 'package:recording_cleaner/presentation/blocs/contacts/contacts_event.dart';
 import 'package:recording_cleaner/presentation/blocs/contacts/contacts_state.dart';
@@ -19,12 +22,44 @@ class ContactsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => ContactsBloc(
-        logger: appLogger,
-        contactRepository: context.read(),
-      )..add(const LoadContacts()),
-      child: const _ContactsContent(),
+    return FutureBuilder(
+      future: context.read<app_provider.RepositoryProvider>().contactRepository,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('联系人'),
+              centerTitle: true,
+            ),
+            body: ErrorState(
+              message: snapshot.error.toString(),
+              onRetry: () {
+                context
+                    .read<app_provider.RepositoryProvider>()
+                    .contactRepository;
+              },
+            ),
+          );
+        }
+
+        if (!snapshot.hasData) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('联系人'),
+              centerTitle: true,
+            ),
+            body: const LoadingState(),
+          );
+        }
+
+        return BlocProvider(
+          create: (context) => ContactsBloc(
+            logger: context.read(),
+            contactRepository: snapshot.data!,
+          )..add(const LoadContacts()),
+          child: const _ContactsContent(),
+        );
+      },
     );
   }
 }

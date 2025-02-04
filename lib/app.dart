@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:recording_cleaner/core/providers/database_provider.dart';
+import 'package:recording_cleaner/core/providers/repository_provider.dart';
 import 'package:recording_cleaner/core/theme/app_theme.dart';
 import 'package:recording_cleaner/core/utils/app_logger.dart';
 import 'package:recording_cleaner/presentation/pages/home_page.dart';
@@ -22,6 +23,12 @@ class App extends StatelessWidget {
         Provider<DatabaseProvider>(
           create: (_) => DatabaseProvider(),
           dispose: (_, provider) => provider.close(),
+        ),
+        Provider<RepositoryProvider>(
+          create: (context) => RepositoryProvider(
+            logger: context.read(),
+            databaseProvider: context.read(),
+          ),
         ),
       ],
       child: ScreenUtilInit(
