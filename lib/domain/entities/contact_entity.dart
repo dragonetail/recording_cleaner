@@ -52,57 +52,9 @@ enum ProtectionStrategy {
   none,
 }
 
-/// 联系人实体类
+/// 联系人实体
 class ContactEntity extends Equatable {
-  /// 联系人的唯一标识符
-  final String id;
-
-  /// 联系人姓名
-  final String name;
-
-  /// 联系人电话号码
-  final String phoneNumber;
-
-  /// 联系人分类
-  final ContactCategory category;
-
-  /// 保护策略
-  final ProtectionStrategy protectionStrategy;
-
-  /// 保护策略参数（如保护时间或空间大小）
-  final String? protectionParam;
-
-  /// 备注信息
-  final String? note;
-
-  /// 创建时间
-  final DateTime? createdAt;
-
-  /// 最后更新时间
-  final DateTime? updatedAt;
-
-  /// 是否已被标记为删除
-  final bool isDeleted;
-
-  /// 是否受保护
-  final bool isProtected;
-
-  /// 创建一个[ContactEntity]实例
-  ///
-  /// 必需参数：
-  /// - [id]：联系人的唯一标识符
-  /// - [name]：联系人姓名
-  /// - [phoneNumber]：联系人电话号码
-  /// - [category]：联系人分类
-  /// - [protectionStrategy]：保护策略
-  /// - [createdAt]：创建时间
-  /// - [updatedAt]：更新时间
-  /// - [isProtected]：是否受保护
-  ///
-  /// 可选参数：
-  /// - [protectionParam]：保护策略参数
-  /// - [note]：备注信息
-  /// - [isDeleted]：删除标记，默认为false
+  /// 创建[ContactEntity]实例
   const ContactEntity({
     required this.id,
     required this.name,
@@ -116,19 +68,48 @@ class ContactEntity extends Equatable {
     this.isDeleted = false,
   });
 
+  /// 联系人ID
+  final String id;
+
+  /// 联系人姓名
+  final String name;
+
+  /// 联系人电话号码
+  final String phoneNumber;
+
+  /// 联系人分类
+  final ContactCategory category;
+
+  /// 是否受保护
+  final bool isProtected;
+
+  /// 创建时间
+  final DateTime? createdAt;
+
+  /// 更新时间
+  final DateTime? updatedAt;
+
+  /// 保护策略参数（如保护时间或空间大小）
+  final String? protectionParam;
+
+  /// 备注信息
+  final String? note;
+
+  /// 是否已被标记为删除
+  final bool isDeleted;
+
   @override
   List<Object?> get props => [
         id,
         name,
         phoneNumber,
         category,
-        protectionStrategy,
-        protectionParam,
-        note,
+        isProtected,
         createdAt,
         updatedAt,
+        protectionParam,
+        note,
         isDeleted,
-        isProtected,
       ];
 
   /// 复制新实例
@@ -140,6 +121,9 @@ class ContactEntity extends Equatable {
     bool? isProtected,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? protectionParam,
+    String? note,
+    bool? isDeleted,
   }) {
     return ContactEntity(
       id: id ?? this.id,
@@ -149,9 +133,9 @@ class ContactEntity extends Equatable {
       isProtected: isProtected ?? this.isProtected,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      protectionParam: this.protectionParam,
-      note: this.note,
-      isDeleted: this.isDeleted,
+      protectionParam: protectionParam ?? this.protectionParam,
+      note: note ?? this.note,
+      isDeleted: isDeleted ?? this.isDeleted,
     );
   }
 }
