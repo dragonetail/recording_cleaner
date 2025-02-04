@@ -21,21 +21,3 @@ class LoadOverviewData extends OverviewEvent {
 class RefreshOverviewData extends OverviewEvent {
   const RefreshOverviewData();
 }
-
-/// 清理存储空间事件
-class CleanStorage extends OverviewEvent {
-  /// 要清理的文件类型
-  /// - recording：录音文件
-  /// - call：通话录音
-  final String type;
-
-  const CleanStorage(this.type);
-
-  @override
-  List<Object?> get props => [type];
-}
-
-/// 恢复测试数据事件
-class RestoreTestData extends OverviewEvent {
-  const RestoreTestData();
-}

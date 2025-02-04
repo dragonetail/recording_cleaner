@@ -12,7 +12,6 @@
 /// {@endtemplate}
 
 import 'package:equatable/equatable.dart';
-import 'package:recording_cleaner/domain/entities/recording_entity.dart';
 
 /// 通话类型枚举
 enum CallType {
@@ -24,18 +23,42 @@ enum CallType {
 }
 
 /// 通话录音实体类
-class CallRecordingEntity extends RecordingEntity {
-  /// 通话号码
+class CallRecordingEntity extends Equatable {
+  /// 唯一标识符
+  final String id;
+
+  /// 文件名称
+  final String name;
+
+  /// 文件路径
+  final String path;
+
+  /// 文件大小（字节）
+  final int size;
+
+  /// 录音时长
+  final Duration duration;
+
+  /// 创建时间
+  final DateTime createdAt;
+
+  /// 更新时间
+  final DateTime updatedAt;
+
+  /// 电话号码
   final String phoneNumber;
 
   /// 通话类型
   final CallType callType;
 
-  /// 关联的联系人ID
-  final String? contactId;
+  /// 联系人ID
+  final String contactId;
 
-  /// 重要性标记
+  /// 是否重要
   final bool isImportant;
+
+  /// 是否已删除
+  final bool isDeleted;
 
   /// 创建一个[CallRecordingEntity]实例
   ///
@@ -45,26 +68,33 @@ class CallRecordingEntity extends RecordingEntity {
   /// - [contactId]：关联的联系人ID（可选）
   /// - [isImportant]：重要性标记，默认为false
   const CallRecordingEntity({
-    required super.id,
-    required super.name,
-    required super.path,
-    required super.size,
-    required super.duration,
-    required super.createdAt,
-    required super.updatedAt,
+    required this.id,
+    required this.name,
+    required this.path,
+    required this.size,
+    required this.duration,
+    required this.createdAt,
+    required this.updatedAt,
     required this.phoneNumber,
     required this.callType,
-    this.contactId,
+    required this.contactId,
     this.isImportant = false,
-    super.isDeleted = false,
+    this.isDeleted = false,
   });
 
   @override
   List<Object?> get props => [
-        ...super.props,
+        id,
+        name,
+        path,
+        size,
+        duration,
+        createdAt,
+        updatedAt,
         phoneNumber,
         callType,
         contactId,
         isImportant,
+        isDeleted,
       ];
 }
