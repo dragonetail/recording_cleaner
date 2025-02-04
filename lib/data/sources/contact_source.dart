@@ -41,6 +41,9 @@ abstract class ContactSource {
 
   /// 创建测试数据
   Future<void> createTestData();
+
+  /// 批量更新联系人分类
+  Future<void> batchUpdateCategory(List<String> ids, ContactCategory category);
 }
 
 /// 联系人数据源
@@ -219,6 +222,26 @@ class ContactSourceImpl implements ContactSource {
       });
     } catch (e, s) {
       _logger.e('创建测试数据失败', error: e, stackTrace: s);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> batchUpdateCategory(
+      List<String> ids, ContactCategory category) async {
+    try {
+      await _isar.writeTxn(() async {
+        for (final id in ids) {
+          final contact = await _isar.contactModels.get(HashUtils.fastHash(id));
+          if (contact != null) {
+            await _isar.contactModels.put(
+              contact.copyWith(category: category),
+            );
+          }
+        }
+      });
+    } catch (e, s) {
+      _logger.e('批量更新联系人分类失败', error: e, stackTrace: s);
       rethrow;
     }
   }

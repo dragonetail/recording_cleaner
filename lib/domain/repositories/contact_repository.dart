@@ -45,4 +45,7 @@ abstract class ContactRepository {
 
   /// 创建测试数据
   Future<void> createTestData();
+
+  /// 批量更新联系人分类
+  Future<void> batchUpdateCategory(List<String> ids, ContactCategory category);
 }

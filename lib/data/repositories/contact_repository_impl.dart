@@ -103,37 +103,6 @@ class ContactRepositoryImpl implements ContactRepository {
   }
 
   @override
-  Future<bool> updateContactProtectionStrategy(
-    String id,
-    ProtectionStrategy strategy, {
-    String? param,
-  }) {
-    return _contactSource.updateContactProtectionStrategy(
-      id,
-      strategy,
-      param: param,
-    );
-  }
-
-  @override
-  Future<bool> batchUpdateCategory(List<String> ids, ContactCategory category) {
-    return _contactSource.batchUpdateCategory(ids, category);
-  }
-
-  @override
-  Future<bool> batchUpdateProtectionStrategy(
-    List<String> ids,
-    ProtectionStrategy strategy, {
-    String? param,
-  }) {
-    return _contactSource.batchUpdateProtectionStrategy(
-      ids,
-      strategy,
-      param: param,
-    );
-  }
-
-  @override
   Future<ContactEntity?> findContactByPhoneNumber(String phoneNumber) async {
     try {
       final contact =
@@ -151,6 +120,17 @@ class ContactRepositoryImpl implements ContactRepository {
       await _contactSource.createTestData();
     } catch (e, s) {
       _logger.e('创建测试数据失败', error: e, stackTrace: s);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> batchUpdateCategory(
+      List<String> ids, ContactCategory category) async {
+    try {
+      await _contactSource.batchUpdateCategory(ids, category);
+    } catch (e, s) {
+      _logger.e('批量更新联系人分类失败', error: e, stackTrace: s);
       rethrow;
     }
   }
