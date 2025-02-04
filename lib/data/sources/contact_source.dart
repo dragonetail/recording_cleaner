@@ -5,28 +5,23 @@
 
 import 'package:isar/isar.dart';
 import 'package:recording_cleaner/core/utils/app_logger.dart';
+import 'package:recording_cleaner/core/utils/hash_utils.dart';
 import 'package:recording_cleaner/data/models/contact_model.dart';
 import 'package:recording_cleaner/domain/entities/contact_entity.dart';
 
 /// 联系人数据源接口
 abstract class ContactSource {
-  /// 获取所有联系人
-  Future<List<ContactModel>> getContacts({
-    ContactCategory? category,
-    ProtectionStrategy? protectionStrategy,
-    String? searchText,
-    String? sortBy,
-    bool? ascending,
-  });
+  /// 获取联系人列表
+  Future<List<ContactModel>> getContacts();
 
   /// 删除联系人
-  Future<bool> deleteContacts(List<String> ids);
+  Future<void> deleteContacts(List<String> ids);
 
   /// 获取单个联系人
   Future<ContactModel?> getContact(String id);
 
   /// 更新联系人
-  Future<bool> updateContact(ContactModel contact);
+  Future<void> updateContact(ContactModel contact);
 
   /// 获取指定分类的联系人
   Future<List<ContactModel>> getContactsByCategory(
@@ -36,24 +31,10 @@ abstract class ContactSource {
   });
 
   /// 更新联系人分类
-  Future<bool> updateContactCategory(String id, ContactCategory category);
+  Future<void> updateContactCategory(String id, ContactCategory category);
 
-  /// 更新联系人保护策略
-  Future<bool> updateContactProtectionStrategy(
-    String id,
-    ProtectionStrategy strategy, {
-    String? param,
-  });
-
-  /// 批量更新联系人分类
-  Future<bool> batchUpdateCategory(List<String> ids, ContactCategory category);
-
-  /// 批量更新联系人保护策略
-  Future<bool> batchUpdateProtectionStrategy(
-    List<String> ids,
-    ProtectionStrategy strategy, {
-    String? param,
-  });
+  /// 更新联系人保护状态
+  Future<void> updateContactProtection(String id, bool isProtected);
 
   /// 根据电话号码查找联系人
   Future<ContactModel?> findContactByPhoneNumber(String phoneNumber);
@@ -89,7 +70,12 @@ class ContactSourceImpl implements ContactSource {
   Future<void> deleteContacts(List<String> ids) async {
     try {
       await _isar.writeTxn(() async {
-        await _isar.contactModels.deleteAll(ids);
+        for (final id in ids) {
+          final contact = await _isar.contactModels.get(HashUtils.fastHash(id));
+          if (contact != null) {
+            await _isar.contactModels.delete(contact.isarId);
+          }
+        }
       });
     } catch (e, s) {
       _logger.e('删除联系人失败', error: e, stackTrace: s);
@@ -100,7 +86,7 @@ class ContactSourceImpl implements ContactSource {
   /// 获取单个联系人
   Future<ContactModel?> getContact(String id) async {
     try {
-      final contact = await _isar.contactModels.get(id);
+      final contact = await _isar.contactModels.get(HashUtils.fastHash(id));
       return contact;
     } catch (e, s) {
       _logger.e('获取联系人失败', error: e, stackTrace: s);
@@ -144,7 +130,7 @@ class ContactSourceImpl implements ContactSource {
       String id, ContactCategory category) async {
     try {
       await _isar.writeTxn(() async {
-        final contact = await _isar.contactModels.get(id);
+        final contact = await _isar.contactModels.get(HashUtils.fastHash(id));
         if (contact != null) {
           await _isar.contactModels.put(
             contact.copyWith(category: category),
@@ -161,7 +147,7 @@ class ContactSourceImpl implements ContactSource {
   Future<void> updateContactProtection(String id, bool isProtected) async {
     try {
       await _isar.writeTxn(() async {
-        final contact = await _isar.contactModels.get(id);
+        final contact = await _isar.contactModels.get(HashUtils.fastHash(id));
         if (contact != null) {
           await _isar.contactModels.put(
             contact.copyWith(isProtected: isProtected),
@@ -172,32 +158,6 @@ class ContactSourceImpl implements ContactSource {
       _logger.e('更新联系人保护状态失败', error: e, stackTrace: s);
       rethrow;
     }
-  }
-
-  @override
-  Future<bool> updateContactProtectionStrategy(
-    String id,
-    ProtectionStrategy strategy, {
-    String? param,
-  }) {
-    // Implementation needed
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<bool> batchUpdateCategory(List<String> ids, ContactCategory category) {
-    // Implementation needed
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<bool> batchUpdateProtectionStrategy(
-    List<String> ids,
-    ProtectionStrategy strategy, {
-    String? param,
-  }) {
-    // Implementation needed
-    throw UnimplementedError();
   }
 
   @override

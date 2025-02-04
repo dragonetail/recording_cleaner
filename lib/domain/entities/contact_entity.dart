@@ -76,10 +76,10 @@ class ContactEntity extends Equatable {
   final String? note;
 
   /// 创建时间
-  final DateTime createdAt;
+  final DateTime? createdAt;
 
   /// 最后更新时间
-  final DateTime updatedAt;
+  final DateTime? updatedAt;
 
   /// 是否已被标记为删除
   final bool isDeleted;
@@ -109,9 +109,8 @@ class ContactEntity extends Equatable {
     required this.phoneNumber,
     this.category = ContactCategory.none,
     this.isProtected = false,
-    required this.protectionStrategy,
-    required this.createdAt,
-    required this.updatedAt,
+    this.createdAt,
+    this.updatedAt,
     this.protectionParam,
     this.note,
     this.isDeleted = false,
@@ -139,6 +138,8 @@ class ContactEntity extends Equatable {
     String? phoneNumber,
     ContactCategory? category,
     bool? isProtected,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return ContactEntity(
       id: id ?? this.id,
@@ -146,9 +147,8 @@ class ContactEntity extends Equatable {
       phoneNumber: phoneNumber ?? this.phoneNumber,
       category: category ?? this.category,
       isProtected: isProtected ?? this.isProtected,
-      protectionStrategy: this.protectionStrategy,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
       protectionParam: this.protectionParam,
       note: this.note,
       isDeleted: this.isDeleted,

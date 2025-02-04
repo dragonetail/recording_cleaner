@@ -4,6 +4,7 @@
 /// 提供JSON序列化和反序列化功能。
 
 import 'package:isar/isar.dart';
+import 'package:recording_cleaner/core/utils/hash_utils.dart';
 import 'package:recording_cleaner/domain/entities/contact_entity.dart';
 
 part 'contact_model.g.dart';
@@ -18,10 +19,13 @@ class ContactModel {
     required this.phoneNumber,
     this.category = ContactCategory.none,
     this.isProtected = false,
-  });
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  })  : createdAt = createdAt ?? DateTime.now(),
+        updatedAt = updatedAt ?? DateTime.now();
 
   /// 联系人ID
-  Id get isarId => fastHash(id);
+  Id get isarId => HashUtils.fastHash(id);
 
   /// 联系人ID
   @Index(unique: true, replace: true)
@@ -42,6 +46,12 @@ class ContactModel {
   /// 是否受保护
   final bool isProtected;
 
+  /// 创建时间
+  final DateTime createdAt;
+
+  /// 更新时间
+  final DateTime updatedAt;
+
   /// 从实体转换为数据模型
   factory ContactModel.fromEntity(ContactEntity entity) {
     return ContactModel(
@@ -50,6 +60,8 @@ class ContactModel {
       phoneNumber: entity.phoneNumber,
       category: entity.category,
       isProtected: entity.isProtected,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
     );
   }
 
@@ -61,6 +73,8 @@ class ContactModel {
       phoneNumber: phoneNumber,
       category: category,
       isProtected: isProtected,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
     );
   }
 
@@ -71,6 +85,8 @@ class ContactModel {
     String? phoneNumber,
     ContactCategory? category,
     bool? isProtected,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return ContactModel(
       id: id ?? this.id,
@@ -78,22 +94,8 @@ class ContactModel {
       phoneNumber: phoneNumber ?? this.phoneNumber,
       category: category ?? this.category,
       isProtected: isProtected ?? this.isProtected,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
-  }
-
-  /// 计算字符串的哈希值
-  int fastHash(String string) {
-    var hash = 0xcbf29ce484222325;
-
-    var i = 0;
-    while (i < string.length) {
-      final codeUnit = string.codeUnitAt(i++);
-      hash ^= codeUnit >> 8;
-      hash *= 0x100000001b3;
-      hash ^= codeUnit & 0xFF;
-      hash *= 0x100000001b3;
-    }
-
-    return hash;
   }
 }
