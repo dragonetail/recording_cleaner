@@ -93,3 +93,18 @@ class UpdateContactProtection extends ContactsEvent {
   @override
   List<Object?> get props => [id, isProtected];
 }
+
+/// 批量更新联系人分类事件
+class BatchUpdateCategory extends ContactsEvent {
+  /// 创建[BatchUpdateCategory]实例
+  const BatchUpdateCategory(this.ids, this.category);
+
+  /// 联系人ID列表
+  final List<String> ids;
+
+  /// 新的分类
+  final ContactCategory category;
+
+  @override
+  List<Object?> get props => [ids, category];
+}

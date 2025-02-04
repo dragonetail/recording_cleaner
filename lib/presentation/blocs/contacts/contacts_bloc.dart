@@ -22,6 +22,7 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
     on<ToggleSelectAll>(_onToggleSelectAll);
     on<UpdateContactCategory>(_onUpdateContactCategory);
     on<UpdateContactProtection>(_onUpdateContactProtection);
+    on<BatchUpdateCategory>(_onBatchUpdateCategory);
   }
 
   final AppLogger _logger;
@@ -176,6 +177,28 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
       ));
     } catch (e, s) {
       _logger.e('更新联系人保护状态失败', error: e, stackTrace: s);
+      emit(state.copyWith(
+        error: e.toString(),
+      ));
+    }
+  }
+
+  Future<void> _onBatchUpdateCategory(
+    BatchUpdateCategory event,
+    Emitter<ContactsState> emit,
+  ) async {
+    try {
+      await _contactRepository.batchUpdateCategory(event.ids, event.category);
+
+      final contacts = await _contactRepository.getContacts();
+
+      emit(state.copyWith(
+        contacts: contacts,
+        selectedContacts: [],
+        isSelectionMode: false,
+      ));
+    } catch (e, s) {
+      _logger.e('批量更新联系人分类失败', error: e, stackTrace: s);
       emit(state.copyWith(
         error: e.toString(),
       ));

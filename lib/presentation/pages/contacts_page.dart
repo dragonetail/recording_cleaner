@@ -6,7 +6,8 @@ import 'package:provider/provider.dart';
 import 'package:recording_cleaner/core/providers/repository_provider.dart'
     as app_provider;
 import 'package:recording_cleaner/core/utils/app_logger.dart';
-import 'package:recording_cleaner/domain/entities/contact_entity.dart';
+import 'package:recording_cleaner/domain/entities/contact_entity.dart'
+    as contact_entity;
 import 'package:recording_cleaner/presentation/blocs/contacts/contacts_bloc.dart';
 import 'package:recording_cleaner/presentation/blocs/contacts/contacts_event.dart';
 import 'package:recording_cleaner/presentation/blocs/contacts/contacts_state.dart';
@@ -100,6 +101,100 @@ class _ContactsContent extends StatelessWidget {
                           .read<ContactsBloc>()
                           .add(const EnterSelectionMode());
                     },
+                  ),
+                  PopupMenuButton<contact_entity.ContactCategory>(
+                    icon: const Icon(Icons.category_rounded),
+                    tooltip: '分类',
+                    onSelected: (category) {
+                      if (state.selectedContacts.isNotEmpty) {
+                        context.read<ContactsBloc>().add(
+                              BatchUpdateCategory(
+                                state.selectedContacts,
+                                category,
+                              ),
+                            );
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: contact_entity.ContactCategory.family,
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.family_restroom_rounded,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            const Text('家人'),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: contact_entity.ContactCategory.friend,
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.people_rounded,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            const Text('朋友'),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: contact_entity.ContactCategory.colleague,
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.work_rounded,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            const Text('同事'),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: contact_entity.ContactCategory.customer,
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.business_rounded,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            const Text('客户'),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: contact_entity.ContactCategory.other,
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.category_rounded,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            const Text('其他'),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: contact_entity.ContactCategory.none,
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.help_outline_rounded,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            const Text('未分类'),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               );
