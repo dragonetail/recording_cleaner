@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:recording_cleaner/presentation/pages/call_recordings_page.dart';
+import 'package:recording_cleaner/presentation/pages/contacts_page.dart';
 import 'package:recording_cleaner/presentation/pages/overview_page.dart';
 import 'package:recording_cleaner/presentation/pages/recordings_page.dart';
 
@@ -22,7 +23,7 @@ class _HomePageState extends State<HomePage> {
     const OverviewPage(),
     const RecordingsPage(),
     const CallRecordingsPage(),
-    const Placeholder(),
+    const ContactsPage(),
   ];
 
   @override
