@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:recording_cleaner/presentation/widgets/animated_list_item.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:recording_cleaner/domain/entities/contact_entity.dart';
 
 /// 联系人分类
 enum ContactCategory {
@@ -16,6 +17,9 @@ enum ContactCategory {
   /// 同事
   colleague,
 
+  /// 客户
+  customer,
+
   /// 其他
   other,
 }
@@ -30,43 +34,43 @@ class ContactListItem extends StatelessWidget {
     required this.phoneNumber,
     required this.category,
     required this.onTap,
-    this.isProtected = false,
-    this.onDelete,
-    this.onCategoryChanged,
-    this.onProtectionChanged,
+    required this.onDelete,
+    required this.onCategoryChanged,
+    required this.onProtectionChanged,
+    required this.isProtected,
     this.isSelected = false,
     this.onSelectedChanged,
     this.showSlideAction = true,
   }) : super(key: key);
 
-  /// 索引
+  /// 列表项索引
   final int index;
 
   /// 联系人姓名
   final String name;
 
-  /// 电话号码
+  /// 联系人电话号码
   final String phoneNumber;
 
-  /// 分类
+  /// 联系人分类
   final ContactCategory category;
 
   /// 点击回调
   final VoidCallback onTap;
 
+  /// 删除回调
+  final Future<bool> Function() onDelete;
+
+  /// 分类变更回调
+  final ValueChanged<ContactCategory> onCategoryChanged;
+
+  /// 保护状态变更回调
+  final ValueChanged<bool> onProtectionChanged;
+
   /// 是否受保护
   final bool isProtected;
 
-  /// 删除回调
-  final Future<bool> Function()? onDelete;
-
-  /// 分类变更回调
-  final ValueChanged<ContactCategory>? onCategoryChanged;
-
-  /// 保护状态变更回调
-  final ValueChanged<bool>? onProtectionChanged;
-
-  /// 是否选中
+  /// 是否被选中
   final bool isSelected;
 
   /// 选中状态变更回调
@@ -77,172 +81,210 @@ class ContactListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
-    Widget content = Material(
-      color: colorScheme.surface,
-      child: InkWell(
-        onTap: onSelectedChanged != null
-            ? () => onSelectedChanged!(!isSelected)
-            : onTap,
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: 16.w,
-            vertical: 12.h,
-          ),
-          child: Row(
-            children: [
-              if (onSelectedChanged != null) ...[
-                Checkbox(
-                  value: isSelected,
-                  onChanged: (value) => onSelectedChanged!(value ?? false),
-                ),
-                SizedBox(width: 8.w),
-              ],
-              Container(
-                width: 40.w,
-                height: 40.w,
-                decoration: BoxDecoration(
-                  color: colorScheme.primary.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    name.characters.first,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: colorScheme.primary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                  ),
-                ),
-              ),
-              SizedBox(width: 16.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w500,
-                                ),
-                          ),
-                        ),
-                        if (isProtected)
-                          Icon(
-                            Icons.shield_rounded,
-                            size: 20.w,
-                            color: colorScheme.primary,
-                          ),
-                      ],
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      phoneNumber,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: colorScheme.outline,
-                          ),
-                    ),
-                    if (category != ContactCategory.none) ...[
-                      SizedBox(height: 4.h),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8.w,
-                          vertical: 2.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.secondaryContainer,
-                          borderRadius: BorderRadius.circular(4.r),
-                        ),
-                        child: Text(
-                          _getCategoryText(category),
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: colorScheme.onSecondaryContainer,
-                                  ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
+    final content = ListTile(
+      leading: CircleAvatar(
+        backgroundColor: colorScheme.primary,
+        child: Text(
+          name.substring(0, 1),
+          style: TextStyle(
+            color: colorScheme.onPrimary,
+            fontSize: 16.sp,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),
+      title: Text(
+        name,
+        style: theme.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      subtitle: Text(
+        phoneNumber,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          color: theme.textTheme.bodySmall?.color,
+        ),
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (isProtected)
+            Icon(
+              Icons.shield_rounded,
+              size: 20.w,
+              color: colorScheme.primary,
+            ),
+          SizedBox(width: 8.w),
+          Icon(
+            _getCategoryIcon(),
+            size: 20.w,
+            color: colorScheme.primary,
+          ),
+          if (onSelectedChanged != null) ...[
+            SizedBox(width: 8.w),
+            Checkbox(
+              value: isSelected,
+              onChanged: (value) {
+                onSelectedChanged?.call(value ?? false);
+              },
+            ),
+          ],
+        ],
+      ),
+      onTap: onSelectedChanged != null
+          ? () => onSelectedChanged?.call(!isSelected)
+          : onTap,
     );
 
-    if (onSelectedChanged != null) {
-      return Container(
-        margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8.r),
-          boxShadow: [
-            BoxShadow(
-              color: colorScheme.shadow.withOpacity(0.05),
-              blurRadius: 8.r,
-              offset: Offset(0, 2.h),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8.r),
-          child: content,
-        ),
-      );
+    if (!showSlideAction) {
+      return content;
     }
 
-    return AnimatedListItem(
-      index: index,
-      onDelete: onDelete,
-      onAction: onProtectionChanged != null
-          ? () => onProtectionChanged!(!isProtected)
-          : null,
-      actionLabel: isProtected ? '取消保护' : '设置保护',
-      actionColor: colorScheme.secondary,
-      showSlideAction: showSlideAction,
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8.r),
-          boxShadow: [
-            BoxShadow(
-              color: colorScheme.shadow.withOpacity(0.05),
-              blurRadius: 8.r,
-              offset: Offset(0, 2.h),
-            ),
-          ],
+    return Slidable(
+      key: ValueKey(index),
+      endActionPane: ActionPane(
+        motion: const ScrollMotion(),
+        dismissible: DismissiblePane(
+          onDismissed: () {
+            onDelete();
+          },
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8.r),
-          child: content,
-        ),
+        children: [
+          SlidableAction(
+            onPressed: (_) {
+              onDelete();
+            },
+            backgroundColor: colorScheme.error,
+            foregroundColor: colorScheme.onError,
+            icon: Icons.delete_rounded,
+            label: '删除',
+          ),
+          SlidableAction(
+            onPressed: (_) {
+              onProtectionChanged(!isProtected);
+            },
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
+            icon: isProtected ? Icons.shield_rounded : Icons.shield_outlined,
+            label: isProtected ? '取消保护' : '保护',
+          ),
+          SlidableAction(
+            onPressed: (_) {
+              _showCategoryDialog(context);
+            },
+            backgroundColor: colorScheme.secondary,
+            foregroundColor: colorScheme.onSecondary,
+            icon: Icons.category_rounded,
+            label: '分类',
+          ),
+        ],
       ),
+      child: content,
     );
   }
 
-  String _getCategoryText(ContactCategory category) {
+  /// 获取分类图标
+  IconData _getCategoryIcon() {
     switch (category) {
       case ContactCategory.family:
-        return '家人';
+        return Icons.family_restroom_rounded;
       case ContactCategory.friend:
-        return '朋友';
+        return Icons.people_rounded;
       case ContactCategory.colleague:
-        return '同事';
+        return Icons.work_rounded;
+      case ContactCategory.customer:
+        return Icons.business_rounded;
       case ContactCategory.other:
-        return '其他';
-      default:
-        return '';
+        return Icons.category_rounded;
+      case ContactCategory.none:
+        return Icons.help_outline_rounded;
+    }
+  }
+
+  /// 显示分类选择对话框
+  Future<void> _showCategoryDialog(BuildContext context) async {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    final result = await showDialog<ContactCategory>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('选择分类'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(
+                  Icons.family_restroom_rounded,
+                  color: colorScheme.primary,
+                ),
+                title: const Text('家人'),
+                onTap: () {
+                  Navigator.of(context).pop(ContactCategory.family);
+                },
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.people_rounded,
+                  color: colorScheme.primary,
+                ),
+                title: const Text('朋友'),
+                onTap: () {
+                  Navigator.of(context).pop(ContactCategory.friend);
+                },
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.work_rounded,
+                  color: colorScheme.primary,
+                ),
+                title: const Text('同事'),
+                onTap: () {
+                  Navigator.of(context).pop(ContactCategory.colleague);
+                },
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.business_rounded,
+                  color: colorScheme.primary,
+                ),
+                title: const Text('客户'),
+                onTap: () {
+                  Navigator.of(context).pop(ContactCategory.customer);
+                },
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.category_rounded,
+                  color: colorScheme.primary,
+                ),
+                title: const Text('其他'),
+                onTap: () {
+                  Navigator.of(context).pop(ContactCategory.other);
+                },
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.help_outline_rounded,
+                  color: colorScheme.primary,
+                ),
+                title: const Text('未分类'),
+                onTap: () {
+                  Navigator.of(context).pop(ContactCategory.none);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (result != null) {
+      onCategoryChanged(result);
     }
   }
 }

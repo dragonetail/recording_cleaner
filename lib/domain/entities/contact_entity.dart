@@ -16,19 +16,25 @@
 
 import 'package:equatable/equatable.dart';
 
-/// 联系人分类枚举
+/// 联系人分类
 enum ContactCategory {
-  /// 安全区：重要联系人，录音永久保存
-  safe,
-
-  /// 临时区：普通联系人，定期清理
-  temporary,
-
-  /// 黑名单：骚扰号码，立即清理
-  blacklist,
-
   /// 未分类
-  unclassified,
+  none,
+
+  /// 家人
+  family,
+
+  /// 朋友
+  friend,
+
+  /// 同事
+  colleague,
+
+  /// 客户
+  customer,
+
+  /// 其他
+  other,
 }
 
 /// 联系人保护策略枚举
@@ -78,6 +84,9 @@ class ContactEntity extends Equatable {
   /// 是否已被标记为删除
   final bool isDeleted;
 
+  /// 是否受保护
+  final bool isProtected;
+
   /// 创建一个[ContactEntity]实例
   ///
   /// 必需参数：
@@ -88,6 +97,7 @@ class ContactEntity extends Equatable {
   /// - [protectionStrategy]：保护策略
   /// - [createdAt]：创建时间
   /// - [updatedAt]：更新时间
+  /// - [isProtected]：是否受保护
   ///
   /// 可选参数：
   /// - [protectionParam]：保护策略参数
@@ -97,7 +107,8 @@ class ContactEntity extends Equatable {
     required this.id,
     required this.name,
     required this.phoneNumber,
-    required this.category,
+    this.category = ContactCategory.none,
+    this.isProtected = false,
     required this.protectionStrategy,
     required this.createdAt,
     required this.updatedAt,
@@ -118,5 +129,29 @@ class ContactEntity extends Equatable {
         createdAt,
         updatedAt,
         isDeleted,
+        isProtected,
       ];
+
+  /// 复制新实例
+  ContactEntity copyWith({
+    String? id,
+    String? name,
+    String? phoneNumber,
+    ContactCategory? category,
+    bool? isProtected,
+  }) {
+    return ContactEntity(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      category: category ?? this.category,
+      isProtected: isProtected ?? this.isProtected,
+      protectionStrategy: this.protectionStrategy,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
+      protectionParam: this.protectionParam,
+      note: this.note,
+      isDeleted: this.isDeleted,
+    );
+  }
 }

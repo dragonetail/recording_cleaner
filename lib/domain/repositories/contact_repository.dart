@@ -125,4 +125,7 @@ abstract class ContactRepository {
   /// - 如果找到匹配的联系人，返回对应的[ContactEntity]
   /// - 如果未找到匹配的联系人，返回null
   Future<ContactEntity?> findContactByPhoneNumber(String phoneNumber);
+
+  /// 更新联系人保护状态
+  Future<void> updateContactProtection(String id, bool isProtected);
 }
