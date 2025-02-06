@@ -181,6 +181,7 @@ class ContactSourceImpl implements ContactSource {
   @override
   Future<void> createTestData() async {
     try {
+      final now = DateTime.now();
       final testData = [
         ContactModel(
           id: '1',
@@ -188,30 +189,40 @@ class ContactSourceImpl implements ContactSource {
           phoneNumber: '13800138001',
           category: ContactCategory.family,
           isProtected: true,
+          createdAt: now,
+          updatedAt: now,
         ),
         ContactModel(
           id: '2',
           name: '李四',
           phoneNumber: '13800138002',
           category: ContactCategory.friend,
+          createdAt: now,
+          updatedAt: now,
         ),
         ContactModel(
           id: '3',
           name: '王五',
           phoneNumber: '13800138003',
           category: ContactCategory.colleague,
+          createdAt: now,
+          updatedAt: now,
         ),
         ContactModel(
           id: '4',
           name: '赵六',
           phoneNumber: '13800138004',
           category: ContactCategory.customer,
+          createdAt: now,
+          updatedAt: now,
         ),
         ContactModel(
           id: '5',
           name: '孙七',
           phoneNumber: '13800138005',
           category: ContactCategory.other,
+          createdAt: now,
+          updatedAt: now,
         ),
       ];
 

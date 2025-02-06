@@ -133,3 +133,7 @@ class OverviewBloc extends Bloc<OverviewEvent, OverviewState> {
     }
   }
 }
+
+class CleanStorage extends OverviewEvent {}
+
+class RestoreTestData extends OverviewEvent {}

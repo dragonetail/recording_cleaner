@@ -21,7 +21,9 @@ class RecordingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => RecordingsBloc(
-        logger: appLogger,
+        logger: context.read<AppLogger>(),
+        getRecordings: context.read(),
+        deleteRecordings: context.read(),
         recordingRepository: context.read(),
       )..add(const LoadRecordings()),
       child: const _RecordingsContent(),

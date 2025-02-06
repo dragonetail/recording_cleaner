@@ -1,25 +1,82 @@
 pluginManagement {
-    def flutterSdkPath = {
-        def properties = new Properties()
-        file("local.properties").withInputStream { properties.load(it) }
-        def flutterSdkPath = properties.getProperty("flutter.sdk")
-        assert flutterSdkPath != null, "flutter.sdk not set in local.properties"
-        return flutterSdkPath
-    }()
-
-    includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
-
     repositories {
+        gradlePluginPortal()
         google()
         mavenCentral()
-        gradlePluginPortal()
     }
 }
 
-plugins {
-    id "dev.flutter.flutter-plugin-loader" version "1.0.0"
-    id "com.android.application" version "8.2.1" apply false
-    id "org.jetbrains.kotlin.android" version "1.9.22" apply false
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
 }
 
-include ":app"
+include ':app'
+
+def flutterProjectRoot = rootProject.projectDir.parentFile.toPath()
+
+def plugins = new Properties()
+def pluginsFile = new File(flutterProjectRoot.toFile(), '.flutter-plugins')
+if (pluginsFile.exists()) {
+    pluginsFile.withReader('UTF-8') { reader -> plugins.load(reader) }
+}
+
+plugins.each { name, path ->
+    def pluginDirectory = flutterProjectRoot.resolve(path).resolve('android').toFile()
+    include ":$name"
+    project(":$name").projectDir = pluginDirectory
+}
+
+def localPropertiesFile = new File(rootProject.projectDir, "local.properties")
+def properties = new Properties()
+
+assert localPropertiesFile.exists()
+localPropertiesFile.withReader("UTF-8") { reader -> properties.load(reader) }
+
+def flutterSdkPath = properties.getProperty("flutter.sdk")
+assert flutterSdkPath != null, "flutter.sdk not set in local.properties"
+
+apply from: "${flutterSdkPath}/packages/flutter_tools/gradle/app_plugin_loader.gradle"
+
+// Flutter Plugins
+include ':audio_session'
+project(':audio_session').projectDir = new File(flutterSdkPath, 'packages/audio_session/android')
+
+include ':connectivity_plus'
+project(':connectivity_plus').projectDir = new File(flutterSdkPath, 'packages/connectivity_plus/android')
+
+include ':device_info_plus'
+project(':device_info_plus').projectDir = new File(flutterSdkPath, 'packages/device_info_plus/android')
+
+include ':flutter_vibrate'
+project(':flutter_vibrate').projectDir = new File(flutterSdkPath, 'packages/flutter_vibrate/android')
+
+include ':integration_test'
+project(':integration_test').projectDir = new File(flutterSdkPath, 'packages/integration_test/android')
+
+include ':isar_flutter_libs'
+project(':isar_flutter_libs').projectDir = new File(flutterSdkPath, 'packages/isar_flutter_libs/android')
+
+include ':just_audio'
+project(':just_audio').projectDir = new File(flutterSdkPath, 'packages/just_audio/android')
+
+include ':package_info_plus'
+project(':package_info_plus').projectDir = new File(flutterSdkPath, 'packages/package_info_plus/android')
+
+include ':path_provider_android'
+project(':path_provider_android').projectDir = new File(flutterSdkPath, 'packages/path_provider_android/android')
+
+include ':permission_handler_android'
+project(':permission_handler_android').projectDir = new File(flutterSdkPath, 'packages/permission_handler_android/android')
+
+include ':record'
+project(':record').projectDir = new File(flutterSdkPath, 'packages/record/android')
+
+include ':share_plus'
+project(':share_plus').projectDir = new File(flutterSdkPath, 'packages/share_plus/android')
+
+include ':shared_preferences_android'
+project(':shared_preferences_android').projectDir = new File(flutterSdkPath, 'packages/shared_preferences_android/android')

@@ -8,6 +8,8 @@ import 'package:just_audio/just_audio.dart';
 import 'package:recording_cleaner/data/models/call_recording_model.dart';
 import 'package:recording_cleaner/data/sources/call_recording_source.dart';
 import 'package:recording_cleaner/domain/entities/call_recording_entity.dart';
+import 'package:recording_cleaner/domain/entities/contact_entity.dart';
+import 'dart:math';
 
 /// 本地通话录音数据源实现
 class LocalCallRecordingSource implements CallRecordingSource {
@@ -196,6 +198,16 @@ class LocalCallRecordingSource implements CallRecordingSource {
         phoneNumber: '13800138000',
         callType: CallType.incoming,
         contactId: '1',
+        samples: List.generate(100, (index) => index / 100), // 生成测试波形数据
+        contact: ContactEntity(
+          id: '1',
+          name: '张三',
+          phoneNumber: '13800138000',
+          category: ContactCategory.family,
+          isProtected: true,
+          createdAt: now.subtract(const Duration(days: 1)),
+          updatedAt: now.subtract(const Duration(days: 1)),
+        ),
         isImportant: true,
       ),
       CallRecordingModel(
@@ -209,6 +221,16 @@ class LocalCallRecordingSource implements CallRecordingSource {
         phoneNumber: '13800138001',
         callType: CallType.outgoing,
         contactId: '2',
+        samples: List.generate(100, (index) => (100 - index) / 100), // 生成测试波形数据
+        contact: ContactEntity(
+          id: '2',
+          name: '李四',
+          phoneNumber: '13800138001',
+          category: ContactCategory.friend,
+          isProtected: false,
+          createdAt: now.subtract(const Duration(days: 30)),
+          updatedAt: now.subtract(const Duration(days: 30)),
+        ),
       ),
       CallRecordingModel(
         id: '3',
@@ -221,6 +243,17 @@ class LocalCallRecordingSource implements CallRecordingSource {
         phoneNumber: '13800138002',
         callType: CallType.incoming,
         contactId: '3',
+        samples: List.generate(
+            100, (index) => sin(index * pi / 50) / 2 + 0.5), // 生成正弦波测试数据
+        contact: ContactEntity(
+          id: '3',
+          name: '王五',
+          phoneNumber: '13800138002',
+          category: ContactCategory.colleague,
+          isProtected: false,
+          createdAt: now.subtract(const Duration(days: 100)),
+          updatedAt: now.subtract(const Duration(days: 100)),
+        ),
       ),
       CallRecordingModel(
         id: '4',
@@ -233,6 +266,17 @@ class LocalCallRecordingSource implements CallRecordingSource {
         phoneNumber: '13800138003',
         callType: CallType.outgoing,
         contactId: '4',
+        samples:
+            List.generate(100, (index) => Random().nextDouble()), // 生成随机波形数据
+        contact: ContactEntity(
+          id: '4',
+          name: '赵六',
+          phoneNumber: '13800138003',
+          category: ContactCategory.other,
+          isProtected: false,
+          createdAt: now.subtract(const Duration(days: 400)),
+          updatedAt: now.subtract(const Duration(days: 400)),
+        ),
         isImportant: true,
       ),
     ];

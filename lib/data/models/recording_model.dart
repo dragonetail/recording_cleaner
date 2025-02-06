@@ -9,7 +9,8 @@ class RecordingModel extends RecordingEntity {
     required super.duration,
     required super.createdAt,
     required super.updatedAt,
-    super.isDeleted,
+    required super.samples,
+    super.isDeleted = false,
   });
 
   factory RecordingModel.fromJson(Map<String, dynamic> json) {
@@ -21,6 +22,8 @@ class RecordingModel extends RecordingEntity {
       duration: Duration(milliseconds: json['duration'] as int),
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
+      samples:
+          (json['samples'] as List<dynamic>).map((e) => e as double).toList(),
       isDeleted: json['isDeleted'] as bool? ?? false,
     );
   }
@@ -34,6 +37,7 @@ class RecordingModel extends RecordingEntity {
       'duration': duration.inMilliseconds,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+      'samples': samples,
       'isDeleted': isDeleted,
     };
   }
@@ -47,6 +51,7 @@ class RecordingModel extends RecordingEntity {
       duration: entity.duration,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
+      samples: entity.samples,
       isDeleted: entity.isDeleted,
     );
   }
@@ -59,6 +64,7 @@ class RecordingModel extends RecordingEntity {
     Duration? duration,
     DateTime? createdAt,
     DateTime? updatedAt,
+    List<double>? samples,
     bool? isDeleted,
   }) {
     return RecordingModel(
@@ -69,6 +75,7 @@ class RecordingModel extends RecordingEntity {
       duration: duration ?? this.duration,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      samples: samples ?? this.samples,
       isDeleted: isDeleted ?? this.isDeleted,
     );
   }

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:recording_cleaner/data/models/recording_model.dart';
@@ -175,6 +176,7 @@ class LocalRecordingSource implements RecordingSource {
             duration: duration,
             createdAt: stats.changed,
             updatedAt: stats.modified,
+            samples: List.generate(100, (index) => Random().nextDouble()),
           ));
         } catch (e, stackTrace) {
           _logger.e(
@@ -236,6 +238,7 @@ class LocalRecordingSource implements RecordingSource {
         duration: duration,
         createdAt: stats.changed,
         updatedAt: stats.modified,
+        samples: List.generate(100, (index) => Random().nextDouble()),
       );
     } catch (e, stackTrace) {
       _logger.e(

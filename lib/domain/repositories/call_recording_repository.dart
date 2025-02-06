@@ -91,4 +91,7 @@ abstract class CallRecordingRepository {
   ///
   /// 返回更新操作是否成功
   Future<bool> markCallRecordingImportance(String id, bool isImportant);
+
+  /// 切换通话录音的重要性
+  Future<void> toggleCallRecordingImportance(String id);
 }

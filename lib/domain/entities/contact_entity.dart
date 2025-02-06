@@ -138,4 +138,30 @@ class ContactEntity extends Equatable {
       isDeleted: isDeleted ?? this.isDeleted,
     );
   }
+
+  /// 从JSON创建[ContactEntity]实例
+  factory ContactEntity.fromJson(Map<String, dynamic> json) {
+    return ContactEntity(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      phoneNumber: json['phoneNumber'] as String,
+      category: ContactCategory.values[json['category'] as int],
+      isProtected: json['isProtected'] as bool? ?? false,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
+    );
+  }
+
+  /// 将[ContactEntity]转换为JSON映射
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'phoneNumber': phoneNumber,
+      'category': category.index,
+      'isProtected': isProtected,
+      'createdAt': createdAt?.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
+    };
+  }
 }

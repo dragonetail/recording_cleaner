@@ -12,6 +12,7 @@
 /// {@endtemplate}
 
 import 'package:equatable/equatable.dart';
+import 'package:recording_cleaner/domain/entities/contact_entity.dart';
 
 /// 通话类型枚举
 enum CallType {
@@ -60,6 +61,12 @@ class CallRecordingEntity extends Equatable {
   /// 是否已删除
   final bool isDeleted;
 
+  /// 录音文件的样本数据
+  final List<double> samples;
+
+  /// 关联的联系人信息
+  final ContactEntity contact;
+
   /// 创建一个[CallRecordingEntity]实例
   ///
   /// 除了继承自[RecordingEntity]的属性外，还需要以下参数：
@@ -80,6 +87,8 @@ class CallRecordingEntity extends Equatable {
     required this.contactId,
     this.isImportant = false,
     this.isDeleted = false,
+    required this.samples,
+    required this.contact,
   });
 
   @override
@@ -96,5 +105,7 @@ class CallRecordingEntity extends Equatable {
         contactId,
         isImportant,
         isDeleted,
+        samples,
+        contact,
       ];
 }

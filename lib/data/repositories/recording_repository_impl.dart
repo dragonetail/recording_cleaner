@@ -1,3 +1,4 @@
+import 'package:recording_cleaner/core/utils/app_logger.dart';
 import 'package:recording_cleaner/data/models/recording_model.dart';
 import 'package:recording_cleaner/data/sources/recording_source.dart';
 import 'package:recording_cleaner/domain/entities/recording_entity.dart';
@@ -5,8 +6,13 @@ import 'package:recording_cleaner/domain/repositories/recording_repository.dart'
 
 class RecordingRepositoryImpl implements RecordingRepository {
   final RecordingSource _source;
+  final AppLogger _logger;
 
-  RecordingRepositoryImpl(this._source);
+  RecordingRepositoryImpl({
+    required RecordingSource recordingSource,
+    required AppLogger logger,
+  })  : _source = recordingSource,
+        _logger = logger;
 
   @override
   Future<List<RecordingEntity>> getRecordings({

@@ -12,8 +12,12 @@ class RecordingsBloc extends Bloc<RecordingsEvent, RecordingsState> {
   /// 创建[RecordingsBloc]实例
   RecordingsBloc({
     required AppLogger logger,
+    required GetRecordingsUseCase getRecordings,
+    required DeleteRecordingsUseCase deleteRecordings,
     required RecordingRepository recordingRepository,
   })  : _logger = logger,
+        _getRecordings = getRecordings,
+        _deleteRecordings = deleteRecordings,
         _recordingRepository = recordingRepository,
         super(RecordingsState.initial()) {
     on<LoadRecordings>(_onLoadRecordings);
@@ -26,6 +30,8 @@ class RecordingsBloc extends Bloc<RecordingsEvent, RecordingsState> {
   }
 
   final AppLogger _logger;
+  final GetRecordingsUseCase _getRecordings;
+  final DeleteRecordingsUseCase _deleteRecordings;
   final RecordingRepository _recordingRepository;
 
   Future<void> _onLoadRecordings(
@@ -38,7 +44,7 @@ class RecordingsBloc extends Bloc<RecordingsEvent, RecordingsState> {
         error: null,
       ));
 
-      final recordings = await _recordingRepository.getRecordings();
+      final recordings = await _getRecordings();
 
       emit(state.copyWith(
         recordings: recordings,
@@ -58,9 +64,9 @@ class RecordingsBloc extends Bloc<RecordingsEvent, RecordingsState> {
     Emitter<RecordingsState> emit,
   ) async {
     try {
-      await _recordingRepository.deleteRecordings(event.ids);
+      await _deleteRecordings(event.ids);
 
-      final recordings = await _recordingRepository.getRecordings();
+      final recordings = await _getRecordings();
 
       emit(state.copyWith(
         recordings: recordings,
@@ -78,9 +84,9 @@ class RecordingsBloc extends Bloc<RecordingsEvent, RecordingsState> {
     Emitter<RecordingsState> emit,
   ) async {
     try {
-      await _recordingRepository.deleteRecordings(state.selectedRecordings);
+      await _deleteRecordings(state.selectedRecordings);
 
-      final recordings = await _recordingRepository.getRecordings();
+      final recordings = await _getRecordings();
 
       emit(state.copyWith(
         recordings: recordings,

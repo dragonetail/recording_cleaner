@@ -109,7 +109,7 @@ class _CallRecordingsContent extends StatelessWidget {
                                 duration: recording.duration,
                                 size: recording.size,
                                 samples: recording.samples,
-                                dateTime: recording.dateTime,
+                                dateTime: recording.createdAt,
                                 onTap: () {
                                   // TODO: 实现播放功能
                                 },

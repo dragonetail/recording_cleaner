@@ -13,6 +13,7 @@
 /// - 创建时间
 /// - 更新时间
 /// - 删除标记
+/// - 样本数据
 /// {@endtemplate}
 
 import 'package:equatable/equatable.dart';
@@ -43,6 +44,9 @@ class RecordingEntity extends Equatable {
   /// 录音文件是否已被标记为删除
   final bool isDeleted;
 
+  /// 录音文件的样本数据
+  final List<double> samples;
+
   /// 创建一个[RecordingEntity]实例
   ///
   /// 所有参数除[isDeleted]外都是必需的：
@@ -54,6 +58,7 @@ class RecordingEntity extends Equatable {
   /// - [createdAt]：创建时间
   /// - [updatedAt]：更新时间
   /// - [isDeleted]：删除标记，默认为false
+  /// - [samples]：样本数据
   const RecordingEntity({
     required this.id,
     required this.name,
@@ -63,6 +68,7 @@ class RecordingEntity extends Equatable {
     required this.createdAt,
     required this.updatedAt,
     this.isDeleted = false,
+    required this.samples,
   });
 
   /// 用于[Equatable]的属性列表
@@ -78,5 +84,6 @@ class RecordingEntity extends Equatable {
         createdAt,
         updatedAt,
         isDeleted,
+        samples,
       ];
 }

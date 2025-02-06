@@ -4,6 +4,7 @@
 /// 提供JSON序列化和反序列化功能。
 
 import 'package:recording_cleaner/domain/entities/call_recording_entity.dart';
+import 'package:recording_cleaner/domain/entities/contact_entity.dart';
 
 /// 通话录音数据模型
 class CallRecordingModel extends CallRecordingEntity {
@@ -19,6 +20,8 @@ class CallRecordingModel extends CallRecordingEntity {
     required super.phoneNumber,
     required super.callType,
     required super.contactId,
+    required super.samples,
+    required super.contact,
     super.isImportant = false,
     super.isDeleted = false,
   });
@@ -35,7 +38,10 @@ class CallRecordingModel extends CallRecordingEntity {
       updatedAt: DateTime.parse(json['updatedAt'] as String),
       phoneNumber: json['phoneNumber'] as String,
       callType: CallType.values[json['callType'] as int],
-      contactId: json['contactId'] as String?,
+      contactId: json['contactId'] as String,
+      samples:
+          (json['samples'] as List<dynamic>).map((e) => e as double).toList(),
+      contact: ContactEntity.fromJson(json['contact'] as Map<String, dynamic>),
       isImportant: json['isImportant'] as bool? ?? false,
       isDeleted: json['isDeleted'] as bool? ?? false,
     );
@@ -54,6 +60,8 @@ class CallRecordingModel extends CallRecordingEntity {
       'phoneNumber': phoneNumber,
       'callType': callType.index,
       'contactId': contactId,
+      'samples': samples,
+      'contact': contact.toJson(),
       'isImportant': isImportant,
       'isDeleted': isDeleted,
     };
@@ -72,6 +80,8 @@ class CallRecordingModel extends CallRecordingEntity {
       phoneNumber: entity.phoneNumber,
       callType: entity.callType,
       contactId: entity.contactId,
+      samples: entity.samples,
+      contact: entity.contact,
       isImportant: entity.isImportant,
       isDeleted: entity.isDeleted,
     );
@@ -89,6 +99,8 @@ class CallRecordingModel extends CallRecordingEntity {
     String? phoneNumber,
     CallType? callType,
     String? contactId,
+    List<double>? samples,
+    ContactEntity? contact,
     bool? isImportant,
     bool? isDeleted,
   }) {
@@ -103,6 +115,8 @@ class CallRecordingModel extends CallRecordingEntity {
       phoneNumber: phoneNumber ?? this.phoneNumber,
       callType: callType ?? this.callType,
       contactId: contactId ?? this.contactId,
+      samples: samples ?? this.samples,
+      contact: contact ?? this.contact,
       isImportant: isImportant ?? this.isImportant,
       isDeleted: isDeleted ?? this.isDeleted,
     );

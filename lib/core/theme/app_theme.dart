@@ -12,41 +12,41 @@ class AppTheme {
   static ThemeData get light {
     const colorScheme = ColorScheme(
       brightness: Brightness.light,
-      primary: Color(0xFF07C160),
+      primary: Color(0xFF007AFF), // iOS蓝色
       onPrimary: Colors.white,
-      primaryContainer: Color(0xFFECF9F0),
-      onPrimaryContainer: Color(0xFF07C160),
-      secondary: Color(0xFF576B95),
+      primaryContainer: Color(0xFFE5F1FF),
+      onPrimaryContainer: Color(0xFF007AFF),
+      secondary: Color(0xFF5856D6), // iOS紫色
       onSecondary: Colors.white,
-      secondaryContainer: Color(0xFFEEF2F8),
-      onSecondaryContainer: Color(0xFF576B95),
-      tertiary: Color(0xFFFAAD14),
+      secondaryContainer: Color(0xFFEEEEFF),
+      onSecondaryContainer: Color(0xFF5856D6),
+      tertiary: Color(0xFFFF9500), // iOS橙色
       onTertiary: Colors.white,
-      tertiaryContainer: Color(0xFFFFF7E6),
-      onTertiaryContainer: Color(0xFFFAAD14),
-      error: Color(0xFFFA5151),
+      tertiaryContainer: Color(0xFFFFEFD6),
+      onTertiaryContainer: Color(0xFFFF9500),
+      error: Color(0xFFFF3B30), // iOS红色
       onError: Colors.white,
-      errorContainer: Color(0xFFFEEFEF),
-      onErrorContainer: Color(0xFFFA5151),
-      background: Color(0xFFF7F7F7),
-      onBackground: Color(0xFF191919),
+      errorContainer: Color(0xFFFFE5E5),
+      onErrorContainer: Color(0xFFFF3B30),
+      background: Color(0xFFF2F2F7), // iOS背景色
+      onBackground: Color(0xFF000000),
       surface: Colors.white,
-      onSurface: Color(0xFF191919),
-      surfaceVariant: Color(0xFFF2F2F2),
-      onSurfaceVariant: Color(0xFF767676),
-      outline: Color(0xFFB2B2B2),
-      outlineVariant: Color(0xFFE6E6E6),
+      onSurface: Color(0xFF000000),
+      surfaceVariant: Color(0xFFF7F7F7),
+      onSurfaceVariant: Color(0xFF8E8E93), // iOS次要文本色
+      outline: Color(0xFFC5C5C7), // iOS分割线颜色
+      outlineVariant: Color(0xFFE5E5EA),
       shadow: Colors.black,
       scrim: Colors.black,
-      inverseSurface: Color(0xFF191919),
+      inverseSurface: Color(0xFF000000),
       onInverseSurface: Colors.white,
-      inversePrimary: Color(0xFF07C160),
-      surfaceTint: Color(0xFF07C160),
+      inversePrimary: Color(0xFF007AFF),
+      surfaceTint: Color(0xFF007AFF),
     );
 
     return _baseTheme(colorScheme).copyWith(
-      scaffoldBackgroundColor: const Color(0xFFF7F7F7),
-      dividerColor: const Color(0xFFEEEEEE),
+      scaffoldBackgroundColor: const Color(0xFFF2F2F7),
+      dividerColor: const Color(0xFFC5C5C7),
       appBarTheme: AppBarTheme(
         elevation: 0,
         centerTitle: true,
@@ -56,10 +56,10 @@ class AppTheme {
         titleTextStyle: GoogleFonts.notoSans(
           fontSize: 17.sp,
           fontWeight: FontWeight.w600,
-          color: const Color(0xFF191919),
+          color: const Color(0xFF000000),
         ),
         iconTheme: const IconThemeData(
-          color: Color(0xFF191919),
+          color: Color(0xFF007AFF),
         ),
       ),
     );
@@ -69,45 +69,45 @@ class AppTheme {
   static ThemeData get dark {
     const colorScheme = ColorScheme(
       brightness: Brightness.dark,
-      primary: Color(0xFF07C160),
+      primary: Color(0xFF0A84FF), // iOS深色模式蓝色
       onPrimary: Colors.white,
-      primaryContainer: Color(0xFF1A291F),
-      onPrimaryContainer: Color(0xFF07C160),
-      secondary: Color(0xFF576B95),
+      primaryContainer: Color(0xFF1C1C1E),
+      onPrimaryContainer: Color(0xFF0A84FF),
+      secondary: Color(0xFF5E5CE6), // iOS深色模式紫色
       onSecondary: Colors.white,
-      secondaryContainer: Color(0xFF1C222C),
-      onSecondaryContainer: Color(0xFF576B95),
-      tertiary: Color(0xFFFAAD14),
+      secondaryContainer: Color(0xFF1C1C1E),
+      onSecondaryContainer: Color(0xFF5E5CE6),
+      tertiary: Color(0xFFFF9F0A), // iOS深色模式橙色
       onTertiary: Colors.white,
-      tertiaryContainer: Color(0xFF2B2517),
-      onTertiaryContainer: Color(0xFFFAAD14),
-      error: Color(0xFFFA5151),
+      tertiaryContainer: Color(0xFF1C1C1E),
+      onTertiaryContainer: Color(0xFFFF9F0A),
+      error: Color(0xFFFF453A), // iOS深色模式红色
       onError: Colors.white,
-      errorContainer: Color(0xFF2C1D1D),
-      onErrorContainer: Color(0xFFFA5151),
-      background: Color(0xFF191919),
+      errorContainer: Color(0xFF1C1C1E),
+      onErrorContainer: Color(0xFFFF453A),
+      background: Color(0xFF000000), // iOS深色模式背景色
       onBackground: Colors.white,
-      surface: Color(0xFF2C2C2C),
+      surface: Color(0xFF1C1C1E), // iOS深色模式表面色
       onSurface: Colors.white,
-      surfaceVariant: Color(0xFF373737),
-      onSurfaceVariant: Color(0xFFB2B2B2),
-      outline: Color(0xFF767676),
-      outlineVariant: Color(0xFF2C2C2C),
+      surfaceVariant: Color(0xFF2C2C2E),
+      onSurfaceVariant: Color(0xFF8E8E93),
+      outline: Color(0xFF48484A),
+      outlineVariant: Color(0xFF3A3A3C),
       shadow: Colors.black,
       scrim: Colors.black,
       inverseSurface: Colors.white,
-      onInverseSurface: Color(0xFF191919),
-      inversePrimary: Color(0xFF07C160),
-      surfaceTint: Color(0xFF07C160),
+      onInverseSurface: Color(0xFF000000),
+      inversePrimary: Color(0xFF0A84FF),
+      surfaceTint: Color(0xFF0A84FF),
     );
 
     return _baseTheme(colorScheme).copyWith(
-      scaffoldBackgroundColor: const Color(0xFF191919),
-      dividerColor: const Color(0xFF373737),
+      scaffoldBackgroundColor: const Color(0xFF000000),
+      dividerColor: const Color(0xFF48484A),
       appBarTheme: AppBarTheme(
         elevation: 0,
         centerTitle: true,
-        backgroundColor: const Color(0xFF2C2C2C),
+        backgroundColor: const Color(0xFF1C1C1E),
         surfaceTintColor: Colors.transparent,
         systemOverlayStyle: SystemUiOverlayStyle.light,
         titleTextStyle: GoogleFonts.notoSans(
@@ -116,7 +116,7 @@ class AppTheme {
           color: Colors.white,
         ),
         iconTheme: const IconThemeData(
-          color: Colors.white,
+          color: Color(0xFF0A84FF),
         ),
       ),
     );
@@ -135,7 +135,7 @@ class AppTheme {
       cardTheme: CardTheme(
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8.r),
+          borderRadius: BorderRadius.circular(10.r),
         ),
         margin: EdgeInsets.zero,
         surfaceTintColor: Colors.transparent,
@@ -144,10 +144,10 @@ class AppTheme {
       listTileTheme: ListTileThemeData(
         contentPadding: EdgeInsets.symmetric(
           horizontal: 16.w,
-          vertical: 8.h,
+          vertical: 12.h,
         ),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8.r),
+          borderRadius: BorderRadius.circular(10.r),
         ),
         tileColor: colorScheme.surface,
         iconColor: colorScheme.primary,
@@ -156,16 +156,16 @@ class AppTheme {
         selectedColor: colorScheme.primary,
       ),
       dividerTheme: DividerThemeData(
-        space: 1.h,
-        thickness: 1,
-        color: colorScheme.outlineVariant,
+        space: 0,
+        thickness: 0.5,
+        color: colorScheme.outline,
       ),
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: colorScheme.surface,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
-            top: Radius.circular(16.r),
+            top: Radius.circular(10.r),
           ),
         ),
       ),
@@ -173,7 +173,7 @@ class AppTheme {
         backgroundColor: colorScheme.surface,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.r),
+          borderRadius: BorderRadius.circular(14.r),
         ),
       ),
       snackBarTheme: SnackBarThemeData(
@@ -206,33 +206,30 @@ class AppTheme {
       switchTheme: SwitchThemeData(
         thumbColor: MaterialStateProperty.resolveWith((states) {
           if (states.contains(MaterialState.selected)) {
-            return colorScheme.primary;
+            return Colors.white;
           }
-          return colorScheme.outline;
+          return Colors.white;
         }),
         trackColor: MaterialStateProperty.resolveWith((states) {
           if (states.contains(MaterialState.selected)) {
-            return colorScheme.primaryContainer;
-          }
-          return colorScheme.surfaceVariant;
-        }),
-        trackOutlineColor: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
             return colorScheme.primary;
           }
           return colorScheme.outline;
+        }),
+        trackOutlineColor: MaterialStateProperty.resolveWith((states) {
+          return Colors.transparent;
         }),
       ),
       sliderTheme: SliderThemeData(
         activeTrackColor: colorScheme.primary,
         inactiveTrackColor: colorScheme.surfaceVariant,
-        thumbColor: colorScheme.primary,
+        thumbColor: Colors.white,
         overlayColor: colorScheme.primary.withOpacity(0.12),
         trackHeight: 2.h,
         thumbShape: RoundSliderThumbShape(
           enabledThumbRadius: 6.r,
-          elevation: 0,
-          pressedElevation: 0,
+          elevation: 2,
+          pressedElevation: 4,
         ),
         overlayShape: RoundSliderOverlayShape(
           overlayRadius: 16.r,
@@ -250,6 +247,7 @@ class AppTheme {
           textStyle: textTheme.labelLarge?.copyWith(
             fontWeight: FontWeight.w500,
           ),
+          foregroundColor: colorScheme.primary,
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -294,6 +292,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8.r),
           ),
+          foregroundColor: colorScheme.primary,
         ),
       ),
       chipTheme: ChipThemeData(
@@ -302,7 +301,7 @@ class AppTheme {
           vertical: 6.h,
         ),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(4.r),
+          borderRadius: BorderRadius.circular(8.r),
         ),
         side: BorderSide.none,
         backgroundColor: colorScheme.surfaceVariant,
@@ -404,21 +403,21 @@ class AppTheme {
   /// 构建文字主题
   static TextTheme _buildTextTheme() {
     return GoogleFonts.notoSansTextTheme().copyWith(
-      displayLarge: TextStyle(fontSize: 32.sp),
-      displayMedium: TextStyle(fontSize: 28.sp),
-      displaySmall: TextStyle(fontSize: 24.sp),
-      headlineLarge: TextStyle(fontSize: 22.sp),
-      headlineMedium: TextStyle(fontSize: 20.sp),
-      headlineSmall: TextStyle(fontSize: 18.sp),
-      titleLarge: TextStyle(fontSize: 17.sp),
-      titleMedium: TextStyle(fontSize: 16.sp),
-      titleSmall: TextStyle(fontSize: 15.sp),
-      bodyLarge: TextStyle(fontSize: 15.sp),
-      bodyMedium: TextStyle(fontSize: 14.sp),
-      bodySmall: TextStyle(fontSize: 13.sp),
-      labelLarge: TextStyle(fontSize: 14.sp),
-      labelMedium: TextStyle(fontSize: 13.sp),
-      labelSmall: TextStyle(fontSize: 12.sp),
+      displayLarge: TextStyle(fontSize: 34.sp, letterSpacing: 0.37),
+      displayMedium: TextStyle(fontSize: 28.sp, letterSpacing: 0.36),
+      displaySmall: TextStyle(fontSize: 24.sp, letterSpacing: 0.35),
+      headlineLarge: TextStyle(fontSize: 22.sp, letterSpacing: 0.35),
+      headlineMedium: TextStyle(fontSize: 20.sp, letterSpacing: 0.35),
+      headlineSmall: TextStyle(fontSize: 17.sp, letterSpacing: -0.41),
+      titleLarge: TextStyle(fontSize: 17.sp, letterSpacing: -0.41),
+      titleMedium: TextStyle(fontSize: 16.sp, letterSpacing: -0.32),
+      titleSmall: TextStyle(fontSize: 15.sp, letterSpacing: -0.24),
+      bodyLarge: TextStyle(fontSize: 17.sp, letterSpacing: -0.41),
+      bodyMedium: TextStyle(fontSize: 15.sp, letterSpacing: -0.24),
+      bodySmall: TextStyle(fontSize: 13.sp, letterSpacing: -0.08),
+      labelLarge: TextStyle(fontSize: 13.sp, letterSpacing: -0.08),
+      labelMedium: TextStyle(fontSize: 12.sp, letterSpacing: 0),
+      labelSmall: TextStyle(fontSize: 11.sp, letterSpacing: 0.06),
     );
   }
 
