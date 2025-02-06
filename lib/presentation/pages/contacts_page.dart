@@ -1,317 +1,74 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:provider/provider.dart';
-import 'package:recording_cleaner/core/providers/repository_provider.dart'
-    as app_provider;
-import 'package:recording_cleaner/core/utils/app_logger.dart';
-import 'package:recording_cleaner/domain/entities/contact_entity.dart'
-    as contact_entity;
-import 'package:recording_cleaner/presentation/blocs/contacts/contacts_bloc.dart';
-import 'package:recording_cleaner/presentation/blocs/contacts/contacts_event.dart';
-import 'package:recording_cleaner/presentation/blocs/contacts/contacts_state.dart';
-import 'package:recording_cleaner/presentation/widgets/contact_list_item.dart';
-import 'package:recording_cleaner/presentation/widgets/empty_state.dart';
-import 'package:recording_cleaner/presentation/widgets/loading_state.dart';
-import 'package:recording_cleaner/presentation/widgets/selection_mode.dart';
 
-/// 联系人列表页面
 class ContactsPage extends StatelessWidget {
-  /// 创建[ContactsPage]实例
-  const ContactsPage({Key? key}) : super(key: key);
+  const ContactsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: context.read<app_provider.RepositoryProvider>().contactRepository,
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('联系人'),
-              centerTitle: true,
+    final theme = Theme.of(context);
+    
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('联系人'),
+        actions: [
+          IconButton(
+            onPressed: () {
+              // TODO: 实现搜索功能
+            },
+            icon: const Icon(Icons.search),
+          ),
+          IconButton(
+            onPressed: () {
+              // TODO: 实现筛选功能
+            },
+            icon: const Icon(Icons.filter_list),
+          ),
+        ],
+      ),
+      body: ListView.builder(
+        padding: EdgeInsets.symmetric(vertical: 8.h),
+        itemCount: 10,
+        itemBuilder: (context, index) {
+          return Card(
+            margin: EdgeInsets.symmetric(
+              horizontal: 16.w,
+              vertical: 4.h,
             ),
-            body: ErrorState(
-              message: snapshot.error.toString(),
-              onRetry: () {
-                context
-                    .read<app_provider.RepositoryProvider>()
-                    .contactRepository;
+            child: ListTile(
+              leading: Container(
+                width: 40.w,
+                height: 40.w,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.tertiaryContainer,
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Icon(
+                  Icons.person,
+                  color: theme.colorScheme.onTertiaryContainer,
+                ),
+              ),
+              title: Text('联系人 ${index + 1}'),
+              subtitle: Text('138 0013 800${index}'),
+              trailing: IconButton(
+                onPressed: () {
+                  // TODO: 实现更多操作
+                },
+                icon: const Icon(Icons.more_vert),
+              ),
+              onTap: () {
+                // TODO: 实现联系人详情页面
               },
             ),
           );
-        }
-
-        if (!snapshot.hasData) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('联系人'),
-              centerTitle: true,
-            ),
-            body: const LoadingState(),
-          );
-        }
-
-        return BlocProvider(
-          create: (context) => ContactsBloc(
-            logger: context.read(),
-            contactRepository: snapshot.data!,
-          )..add(const LoadContacts()),
-          child: const _ContactsContent(),
-        );
-      },
-    );
-  }
-}
-
-class _ContactsContent extends StatelessWidget {
-  const _ContactsContent({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<ContactsBloc, ContactsState>(
-      builder: (context, state) {
-        final appBar = state.isSelectionMode
-            ? SelectionModeAppBar(
-                selectedCount: state.selectedContacts.length,
-                totalCount: state.contacts.length,
-                onSelectAll: () {
-                  context.read<ContactsBloc>().add(const ToggleSelectAll());
-                },
-                onDelete: () async {
-                  context.read<ContactsBloc>().add(DeleteSelectedContacts());
-                  return true;
-                },
-                onShare: () {
-                  // TODO: 实现分享功能
-                },
-                onCancel: () {
-                  context.read<ContactsBloc>().add(const ExitSelectionMode());
-                },
-              )
-            : AppBar(
-                title: const Text('联系人'),
-                centerTitle: true,
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.checklist_rounded),
-                    onPressed: () {
-                      context
-                          .read<ContactsBloc>()
-                          .add(const EnterSelectionMode());
-                    },
-                  ),
-                  PopupMenuButton<contact_entity.ContactCategory>(
-                    icon: const Icon(Icons.category_rounded),
-                    tooltip: '分类',
-                    onSelected: (category) {
-                      if (state.selectedContacts.isNotEmpty) {
-                        context.read<ContactsBloc>().add(
-                              BatchUpdateCategory(
-                                state.selectedContacts,
-                                category,
-                              ),
-                            );
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        value: contact_entity.ContactCategory.family,
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.family_restroom_rounded,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            const SizedBox(width: 8),
-                            const Text('家人'),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: contact_entity.ContactCategory.friend,
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.people_rounded,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            const SizedBox(width: 8),
-                            const Text('朋友'),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: contact_entity.ContactCategory.colleague,
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.work_rounded,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            const SizedBox(width: 8),
-                            const Text('同事'),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: contact_entity.ContactCategory.customer,
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.business_rounded,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            const SizedBox(width: 8),
-                            const Text('客户'),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: contact_entity.ContactCategory.other,
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.category_rounded,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            const SizedBox(width: 8),
-                            const Text('其他'),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: contact_entity.ContactCategory.none,
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.help_outline_rounded,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            const SizedBox(width: 8),
-                            const Text('未分类'),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              );
-
-        final body = state.isLoading
-            ? const LoadingState()
-            : state.error != null
-                ? ErrorState(
-                    message: state.error!,
-                    onRetry: () {
-                      context.read<ContactsBloc>().add(const LoadContacts());
-                    },
-                  )
-                : state.contacts.isEmpty
-                    ? EmptyState(
-                        message: '暂无联系人',
-                        action: TextButton.icon(
-                          onPressed: () async {
-                            final repository = await context
-                                .read<app_provider.RepositoryProvider>()
-                                .contactRepository;
-                            await repository.createTestData();
-                            if (context.mounted) {
-                              context
-                                  .read<ContactsBloc>()
-                                  .add(const LoadContacts());
-                            }
-                          },
-                          icon: const Icon(Icons.add_rounded),
-                          label: const Text('创建测试数据'),
-                        ),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: () async {
-                          context
-                              .read<ContactsBloc>()
-                              .add(const LoadContacts());
-                        },
-                        child: AnimationLimiter(
-                          child: ListView.builder(
-                            padding: EdgeInsets.symmetric(vertical: 8.h),
-                            itemCount: state.contacts.length,
-                            itemBuilder: (context, index) {
-                              final contact = state.contacts[index];
-                              return ContactListItem(
-                                index: index,
-                                name: contact.name,
-                                phoneNumber: contact.phoneNumber,
-                                category: contact.category,
-                                onTap: () {
-                                  // TODO: 实现联系人详情页面
-                                },
-                                onDelete: () async {
-                                  context.read<ContactsBloc>().add(
-                                        DeleteContacts([contact.id]),
-                                      );
-                                  return true;
-                                },
-                                onCategoryChanged: (category) {
-                                  context.read<ContactsBloc>().add(
-                                        UpdateContactCategory(
-                                          contact.id,
-                                          category,
-                                        ),
-                                      );
-                                },
-                                onProtectionChanged: (isProtected) {
-                                  context.read<ContactsBloc>().add(
-                                        UpdateContactProtection(
-                                          contact.id,
-                                          isProtected,
-                                        ),
-                                      );
-                                },
-                                isProtected: contact.isProtected,
-                                isSelected:
-                                    state.selectedContacts.contains(contact.id),
-                                onSelectedChanged: state.isSelectionMode
-                                    ? (selected) {
-                                        context.read<ContactsBloc>().add(
-                                              ToggleContactSelection(
-                                                contact.id,
-                                              ),
-                                            );
-                                      }
-                                    : null,
-                                showSlideAction: !state.isSelectionMode,
-                              );
-                            },
-                          ),
-                        ),
-                      );
-
-        return Scaffold(
-          appBar: appBar,
-          body: body,
-          bottomNavigationBar: state.isSelectionMode
-              ? SelectionMode(
-                  selectedCount: state.selectedContacts.length,
-                  totalCount: state.contacts.length,
-                  onSelectAll: () {
-                    context.read<ContactsBloc>().add(const ToggleSelectAll());
-                  },
-                  onDelete: () async {
-                    context.read<ContactsBloc>().add(DeleteSelectedContacts());
-                    return true;
-                  },
-                  onShare: () {
-                    // TODO: 实现分享功能
-                  },
-                  onCancel: () {
-                    context.read<ContactsBloc>().add(const ExitSelectionMode());
-                  },
-                )
-              : null,
-        );
-      },
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // TODO: 实现添加联系人功能
+        },
+        child: const Icon(Icons.person_add),
+      ),
     );
   }
 }

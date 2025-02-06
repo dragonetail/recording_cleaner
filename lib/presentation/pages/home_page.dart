@@ -1,35 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:recording_cleaner/presentation/pages/call_recordings_page.dart';
-import 'package:recording_cleaner/presentation/pages/contacts_page.dart';
 import 'package:recording_cleaner/presentation/pages/overview_page.dart';
 import 'package:recording_cleaner/presentation/pages/recordings_page.dart';
+import 'package:recording_cleaner/presentation/pages/calls_page.dart';
+import 'package:recording_cleaner/presentation/pages/contacts_page.dart';
 
-/// 主页面
 class HomePage extends StatefulWidget {
-  /// 创建[HomePage]实例
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  /// 当前页面索引
   int _currentIndex = 0;
 
-  /// 页面列表
   final List<Widget> _pages = [
     const OverviewPage(),
     const RecordingsPage(),
-    const CallRecordingsPage(),
+    const CallsPage(),
     const ContactsPage(),
   ];
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
@@ -44,47 +38,23 @@ class _HomePageState extends State<HomePage> {
         },
         destinations: [
           NavigationDestination(
-            icon: Icon(
-              Icons.home_outlined,
-              size: 24.w,
-            ),
-            selectedIcon: Icon(
-              Icons.home_rounded,
-              size: 24.w,
-            ),
+            icon: const Icon(Icons.home_outlined),
+            selectedIcon: const Icon(Icons.home),
             label: '概览',
           ),
           NavigationDestination(
-            icon: Icon(
-              Icons.mic_outlined,
-              size: 24.w,
-            ),
-            selectedIcon: Icon(
-              Icons.mic_rounded,
-              size: 24.w,
-            ),
+            icon: const Icon(Icons.mic_outlined),
+            selectedIcon: const Icon(Icons.mic),
             label: '录音',
           ),
           NavigationDestination(
-            icon: Icon(
-              Icons.call_outlined,
-              size: 24.w,
-            ),
-            selectedIcon: Icon(
-              Icons.call_rounded,
-              size: 24.w,
-            ),
+            icon: const Icon(Icons.phone_outlined),
+            selectedIcon: const Icon(Icons.phone),
             label: '通话',
           ),
           NavigationDestination(
-            icon: Icon(
-              Icons.contacts_outlined,
-              size: 24.w,
-            ),
-            selectedIcon: Icon(
-              Icons.contacts_rounded,
-              size: 24.w,
-            ),
+            icon: const Icon(Icons.contacts_outlined),
+            selectedIcon: const Icon(Icons.contacts),
             label: '联系人',
           ),
         ],

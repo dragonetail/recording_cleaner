@@ -7,18 +7,7 @@
 /// - 快捷操作入口
 
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:recording_cleaner/core/constants/app_constants.dart';
-import 'package:recording_cleaner/core/utils/app_logger.dart';
-import 'package:recording_cleaner/presentation/blocs/overview/overview_bloc.dart';
-import 'package:recording_cleaner/presentation/blocs/overview/overview_event.dart';
-import 'package:recording_cleaner/presentation/blocs/overview/overview_state.dart';
-import 'package:recording_cleaner/presentation/widgets/empty_state.dart';
-import 'package:recording_cleaner/presentation/widgets/file_stats_card.dart';
-import 'package:recording_cleaner/presentation/widgets/loading_state.dart';
-import 'package:recording_cleaner/presentation/widgets/storage_card.dart';
 
 /// 概览页面
 class OverviewPage extends StatelessWidget {
@@ -27,107 +16,149 @@ class OverviewPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => OverviewBloc(
-        logger: appLogger,
-        recordingRepository: context.read(),
-        callRecordingRepository: context.read(),
-      )..add(const LoadOverviewData()),
-      child: const _OverviewContent(),
-    );
-  }
-}
-
-class _OverviewContent extends StatelessWidget {
-  const _OverviewContent({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('录音空间清理'),
-        centerTitle: true,
+        title: const Text('概览'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded),
             onPressed: () {
-              context.read<OverviewBloc>().add(const RefreshOverviewData());
+              // TODO: 实现设置功能
             },
+            icon: const Icon(Icons.settings_outlined),
           ),
         ],
       ),
-      body: BlocBuilder<OverviewBloc, OverviewState>(
-        builder: (context, state) {
-          if (state.isLoading) {
-            return const LoadingState();
-          }
+      body: ListView(
+        padding: EdgeInsets.all(16.w),
+        children: [
+          _buildStorageCard(theme),
+          SizedBox(height: 16.h),
+          _buildRecentRecordingsCard(theme),
+          SizedBox(height: 16.h),
+          _buildRecentCallsCard(theme),
+        ],
+      ),
+    );
+  }
 
-          if (state.error != null) {
-            return ErrorState(
-              message: state.error!,
-              onRetry: () {
-                context.read<OverviewBloc>().add(const LoadOverviewData());
-              },
-            );
-          }
-
-          return RefreshIndicator(
-            onRefresh: () async {
-              context.read<OverviewBloc>().add(const RefreshOverviewData());
-            },
-            child: AnimationLimiter(
-              child: ListView(
-                padding: EdgeInsets.symmetric(vertical: 16.h),
-                children: AnimationConfiguration.toStaggeredList(
-                  duration: AppConstants.listItemAnimationDuration,
-                  delay: AppConstants.listAnimationDelay,
-                  childAnimationBuilder: (child) => SlideAnimation(
-                    verticalOffset: 50.h,
-                    child: FadeInAnimation(
-                      child: child,
-                    ),
-                  ),
-                  children: [
-                    StorageCard(
-                      usedStorage: state.usedStorage,
-                      totalStorage: state.totalStorage,
-                    ),
-                    SizedBox(height: 16.h),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.w),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: FileStatsCard(
-                              icon: Icons.mic_rounded,
-                              title: '录音文件',
-                              count: state.recordingsCount,
-                              duration: state.recordingsDuration,
-                              size: state.recordingsSize,
-                              totalSize: state.usedStorage,
-                            ),
-                          ),
-                          SizedBox(width: 16.w),
-                          Expanded(
-                            child: FileStatsCard(
-                              icon: Icons.call_rounded,
-                              title: '通话录音',
-                              count: state.callRecordingsCount,
-                              duration: state.callRecordingsDuration,
-                              size: state.callRecordingsSize,
-                              totalSize: state.usedStorage,
-                              color: Theme.of(context).colorScheme.secondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+  Widget _buildStorageCard(ThemeData theme) {
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '存储空间',
+              style: theme.textTheme.titleMedium,
             ),
-          );
-        },
+            SizedBox(height: 16.h),
+            LinearProgressIndicator(
+              value: 0.7,
+              backgroundColor: theme.colorScheme.surfaceVariant,
+            ),
+            SizedBox(height: 8.h),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '已使用: 70%',
+                  style: theme.textTheme.bodyMedium,
+                ),
+                Text(
+                  '剩余: 30%',
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecentRecordingsCard(ThemeData theme) {
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '最近录音',
+                  style: theme.textTheme.titleMedium,
+                ),
+                TextButton(
+                  onPressed: () {
+                    // TODO: 跳转到录音列表
+                  },
+                  child: const Text('查看全部'),
+                ),
+              ],
+            ),
+            SizedBox(height: 8.h),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: 3,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  leading: const Icon(Icons.mic),
+                  title: Text('录音 ${index + 1}'),
+                  subtitle: Text('2024-03-${10 + index} 10:00'),
+                  trailing: Text('${5 + index}分钟'),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecentCallsCard(ThemeData theme) {
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '最近通话',
+                  style: theme.textTheme.titleMedium,
+                ),
+                TextButton(
+                  onPressed: () {
+                    // TODO: 跳转到通话列表
+                  },
+                  child: const Text('查看全部'),
+                ),
+              ],
+            ),
+            SizedBox(height: 8.h),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: 3,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  leading: const Icon(Icons.phone),
+                  title: Text('联系人 ${index + 1}'),
+                  subtitle: Text('2024-03-${10 + index} 11:00'),
+                  trailing: Text('${3 + index}分钟'),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
